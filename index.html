@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head> 
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grocery POS System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top-bar">
+    <div class="store-name">Store Name</div>
+    <div class="date-time">date/time</div>
+    <div class="cashier-info">Cashier info</div> 
+  </header>
+
+  <main class="pos-layout">
+    <section class="product-panel">
+
+      <div class="category-tabs"> 
+        <button class="tab-btn active">All</button>
+        <button class="tab-btn">Produce</button>
+        <button class="tab-btn">Dairy</button>
+        <button class="tab-btn">Beverages</button>
+      </div>
+
+      <div class="product-grid"> 
+        <button class="product-btn">Product_1<br><span>₱5.00</span></button>
+        <button class="product-btn">Product_2<br><span>₱10.00</span></button>
+        <button class="product-btn">Product_3<br><span>₱15.00</span></button>
+        <button class="product-btn">Product_4<br><span>₱20.00</span></button>
+        <button class="product-btn">Product_5<br><span>₱25.00</span></button>
+        <button class="product-btn">Product_6<br><span>₱30.00</span></button>
+        <button class="product-btn">Product_7<br><span>₱35.00</span></button>
+        <button class="product-btn">Product_8<br><span>₱40.00</span></button>
+      </div>
+
+    </section>
+    
+    <aside class="cart-panel">
+
+      <div class="cart-header">
+        <span>Current Sale</span>
+        <span>Item Count</span>
+      </div>
+
+      <div class="cart-items">...</div>
+
+      <div class="cart-totals">
+        <div class="total-row"><span>Subtotal</span> <span>₱0.00</span></div>
+        <div class="total-row"><span>Tax (12%)</span> <span>₱0.00</span></div>
+        <div class="total-row grand-total"><span>Total</span> <span>₱0.00</span></div>
+        <button class="pay-btn">PROCESS PAYMENT</button>
+      </div>
+
+    </aside>
+
+  </main>
+
+
+</body>
+</html>
