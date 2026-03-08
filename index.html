@@ -9,7 +9,7 @@
 <body>
   <header class="top-bar">
     <div class="store-name">Store Name</div>
-    <div class="date-time">date/time</div>
+    <div class="date-time" id="current-date-time">date/time</div>
     <div class="cashier-info">Cashier info</div> 
   </header>
 
@@ -18,20 +18,23 @@
 
       <div class="category-tabs"> 
         <button class="tab-btn active">All</button>
-        <button class="tab-btn">Produce</button>
-        <button class="tab-btn">Dairy</button>
-        <button class="tab-btn">Beverages</button>
+        <button class="tab-btn">Fruits/Vegetables</button>
+        <button class="tab-btn">Rice</button>
+        <button class="tab-btn">Pasalubong</button>
+        <button class="tab-btn">Cooking Essentials</button>
       </div>
 
       <div class="product-grid"> 
-        <button class="product-btn">Product_1<br><span>₱5.00</span></button>
-        <button class="product-btn">Product_2<br><span>₱10.00</span></button>
-        <button class="product-btn">Product_3<br><span>₱15.00</span></button>
-        <button class="product-btn">Product_4<br><span>₱20.00</span></button>
-        <button class="product-btn">Product_5<br><span>₱25.00</span></button>
-        <button class="product-btn">Product_6<br><span>₱30.00</span></button>
-        <button class="product-btn">Product_7<br><span>₱35.00</span></button>
-        <button class="product-btn">Product_8<br><span>₱40.00</span></button>
+       <!-- 
+        <button class="product-btn">Seedless Grapes<br><span>₱170.00</span></button>
+        <button class="product-btn">Ube Hopia Tipas<br><span>₱75.00</span></button>
+        <button class="product-btn">Sinandomeng Rice<br><span>₱1200.00</span></button>
+        <button class="product-btn">Jasmine-Red Rice<br><span>₱1150.00</span></button>
+        <button class="product-btn">Jasmine-Blue Rice<br><span>₱1300.00</span></button>
+        <button class="product-btn">Apple<br><span>₱140.00</span></button>
+        <button class="product-btn">Kiwi<br><span>₱130.00</span></button>
+        <button class="product-btn">Cooking Oil<br><span>₱95.00</span></button>
+      -->
       </div>
 
     </section>
@@ -40,15 +43,28 @@
 
       <div class="cart-header">
         <span>Current Sale</span>
-        <span>Item Count</span>
+        <button id="clear-sale-btn" class="clear-btn">Clear Sale</button>
       </div>
 
       <div class="cart-items">...</div>
 
       <div class="cart-totals">
-        <div class="total-row"><span>Subtotal</span> <span>₱0.00</span></div>
-        <div class="total-row"><span>Tax (12%)</span> <span>₱0.00</span></div>
-        <div class="total-row grand-total"><span>Total</span> <span>₱0.00</span></div>
+
+        <div class="total-row">
+          <span>Subtotal</span> 
+          <span>₱0.00</span>
+        </div>
+
+        <div class="total-row">
+          <span>Tax (12%)</span>
+          <span>₱0.00</span>
+        </div>
+
+        <div class="total-row grand-total">
+          <span>Total</span>
+          <span>₱0.00</span>
+        </div>
+
         <button class="pay-btn">PROCESS PAYMENT</button>
       </div>
 
@@ -56,6 +72,6 @@
 
   </main>
 
-
+  <script src="app.js"></script>
 </body>
 </html>
