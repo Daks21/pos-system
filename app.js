@@ -1,79 +1,22 @@
-const products = [
-  {
-    id: 1,
-    name: "Seedless Grapes",
-    price: 170.00,
-    category: "Fruits/Vegetables",
-    unitType: "weight"  
-  }, {
-    id: 2,
-    name: "Ube Hopia Tipas",
-    price: 75.00,
-    category: "Pasalubong",
-    unitType: "quantity"  
-  }, {
-    id: 3,
-    name: "Sinandomeng Rice",
-    price: 1200.00,
-    category: "Rice",
-    unitType: "quantity"  
-  }, {
-    id: 4,
-    name: "Jasmine-Red Rice",
-    price: 1150.00,
-    category: "Rice",
-    unitType: "quantity"  
-  }, {
-    id: 5,
-    name: "Jasmine-Blue Rice",
-    price: 1300.00,
-    category: "Rice",
-    unitType: "quantity"  
-  }, {
-    id: 6,
-    name: "Apple",
-    price: 140.00,
-    category: "Fruits/Vegetables",
-    unitType: "weight"  
-  }, {
-    id: 7,
-    name: "Kiwi",
-    price: 130.00,
-    category: "Fruits/Vegetables",
-    unitType: "weight"  
-  }, {
-    id: 8,
-    name: "Cooking Oil",
-    price: 95.00,
-    category: "Cooking Essentials",
-    unitType: "quantity"  
-  } 
-];
 
-const storeSettings = {
-  taxRate: 0.12,
-  storeName: "SEVEN EVELYN",
-  currency: "₱"
-};
-
+let storeSettings = {};
 let cart = [];
+let products = [];
 
-function renderProducts() {
-  // Select the html container
-  const container = document.querySelector(".product-grid");
+// added 'productsData' inside the parentheses
+function renderProducts(productsData) {
+  const productGrid = document.querySelector(".product-grid");
 
-  // loop through the products and create individual html string
-  // .map() is like a production line—it takes one product and "outputs" one button string
-  // "data-id" is a "hidden" label in the button
-  container.innerHTML = products.map(product => {
+  //change loop to use the new 'productData' parameter
+  productGrid.innerHTML = productsData.map(product => {
     return `
       <button class="product-btn" data-id="${product.id}"> 
         ${product.name}<br>
         <span>${storeSettings.currency}${product.price.toFixed(2)}</span> 
       </button>
     `;
-  }).join(""); // .join("") converts the list of strings into one big block of HTML
-} 
+  }).join("");
+}
 
 function renderCart() {
   const container = document.querySelector(".cart-items");
@@ -194,14 +137,7 @@ function updateDateTime() {
   if (dateTimeDisplay) {
     dateTimeDisplay.textContent = formattedDateTime;
   }
-}
-setInterval(updateDateTime, 1000); // Start loop every 1Hz
-
-renderProducts();
-renderCart();
-updateTotals();
-updateDateTime();
-
+} setInterval(updateDateTime, 1000); // Start loop every 1Hz
 
 // event Listener for product selection
 const productGrid = document.querySelector(".product-grid");
@@ -274,3 +210,119 @@ clearSaleBtn.addEventListener("click", () => {
   }
 } )
 
+
+/* ==================
+  Async Functions
+  ================= */
+
+// fetch  store settings from python
+async function loadSettings() {
+  try {
+    const response = await fetch("http://localhost:8000/api/settings");
+    if (!response.ok) throw new Error("Settings fetch failed");
+
+    const dbSettings = await response.json();
+
+    // the data adapter: translates postgreSQPL snake_case into JS camelCase
+    storeSettings = {
+      taxRate: dbSettings.tax_rate,
+      storeName: dbSettings.store_name,
+      // fallback to "₱" just in case the database column is named differently
+      currency: dbSettings.currency_symbol || dbSettings.currency || "₱"
+    }
+    
+    // update the store name on the Screen
+    const storeNameDisplay = document.querySelector(".header h1");
+    if (storeNameDisplay) storeNameDisplay.textContent = storeSettings.storeName;
+
+  } catch (error) {
+    console.error("Failed to load settings:", error);
+  }
+}
+
+// fetch products from python
+async function loadProducts() {
+  try {
+    const response = await fetch("http://localhost:8000/api/products");
+    if (!response.ok) throw new Error("Products fetch failed");
+
+    const data = await response.json();
+    products = data;
+    renderProducts(data); // push the real data into display screen
+  } catch (error) {
+    console.error("Failed to load products:", error);
+    //display an emergency error on the screen if the server is off
+    document.querySelector(".product-grid").innerHTML =
+      "<p style='color:red;'>Could not load products. Is the Python server running?</p>";
+  }
+}
+
+// main switch
+async function initPOS() {
+  await loadSettings(); // get the calibration data (tax rate)
+  await loadProducts(); // get the inventory
+
+  // only run after data arrives
+  renderCart();
+  updateTotals();
+} 
+
+initPOS (); // starting
+updateDateTime();
+
+// the checkout logic
+async function processCheckout() {
+  // safety check: checking if cart is empty
+  if (cart.length === 0) {
+    alert("Cart is empty. Add items before processing payment.");
+    return;
+  }
+
+  // the paylod (must perfectly match python pydantic model)
+  const payload = {
+    // map loops through the cart and renames the properties to match python's snake_case
+    items: cart.map(item => ({
+      product_id: item.id,
+      quantity: item.quantity,
+      unit_price: item.price,
+    })),
+    payment_method: "cash",
+    cashier_id: 1, // using store ID (ID: 1) for now
+  };
+
+  try {
+    // transmit the data via POST request
+    const response = await fetch("http://localhost:8000/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload), // convert JS object to JSON text
+    });
+
+    const result = await response.json();
+
+    // handle the server's response
+    if (result.success) {
+      // success! Enmpty the cart and update the screen
+      cart = [];
+      renderCart();
+      updateTotals();
+
+      // show success message using the browser's built-in alert
+      alert(`Sale complete! Transaction #${result.transaction_id}`);
+
+    } else {
+      // the server rejected it (e.g., bad payment method)
+      alert("Checkout Faield: " + result.error);
+    }
+  } catch (error) {
+    // emergency E-stop (e.g., server is offline)
+    console.error("Checkout Failed:", error);
+    alert("Could not connect to the server. PLease check your connection");
+  }
+}
+
+// hooking up the PAY button
+const checkoutBtn = document.querySelector("#checkout-btn");
+checkoutBtn.addEventListener("click", () => {
+  processCheckout();
+});

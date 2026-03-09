@@ -1,5 +1,5 @@
 # POS-SYSTEM 
 
-This is my first Full stack system development
+this is my first full stack application development
 
-For Educational purpose only
+for educational purpose only

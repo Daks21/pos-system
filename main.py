@@ -1,8 +1,18 @@
 from fastapi import FastAPI 
 from database import get_connection # importing database
 from pydantic import BaseModel # inspects comming data from the frontend to ensure match
+from fastapi.middleware.cors import CORSMiddleware # im port the guard
 
 app = FastAPI()
+
+# configure the guard
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=["*"], # allows any frontend to connect (VIP pass)
+  allow_credentials=True,
+  allow_methods=["*"], # allow GET, POST, etc.
+  allow_headers=["*"],
+)
 
 # define the expected shape of incoming data
 class CartItem(BaseModel):
