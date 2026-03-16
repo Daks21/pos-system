@@ -1,3 +1,9 @@
+const authToken = sessionStorage.getItem('token');
+
+if (!authToken) {
+  // No badge? No entry
+  window.location.href = 'login.html';
+}
 
 let storeSettings = {};
 let cart = [];
@@ -208,12 +214,20 @@ clearSaleBtn.addEventListener("click", () => {
 
     console.log("System reset: Cart Cleared");
   }
-} )
+})
 
+// logout button listener
+const logoutBtn = document.querySelector("#logout-user-btn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    sessionStorage.clear(); // wipes token
+    window.location.href = "login.html"; // back to login
+  });
+}
 
-/* ==================
+/* =============================================================
   Async Functions
-  ================= */
+  ============================================================= */
 
 // fetch  store settings from python
 async function loadSettings() {
@@ -223,7 +237,7 @@ async function loadSettings() {
 
     const dbSettings = await response.json();
 
-    // the data adapter: translates postgreSQPL snake_case into JS camelCase
+    // the data adapter: translates postgreSQL snake_case into JS camelCase
     storeSettings = {
       taxRate: dbSettings.tax_rate,
       storeName: dbSettings.store_name,
@@ -262,6 +276,23 @@ async function initPOS() {
   await loadSettings(); // get the calibration data (tax rate)
   await loadProducts(); // get the inventory
 
+  // Role based UI logic
+  const userRole = sessionStorage.getItem('role');
+  const username = sessionStorage.getItem('username');
+
+  // update the UI to show who is logged in
+  const storeNameDisplay = document.querySelector(".header h1");
+  if (storeNameDisplay) {
+    storeNameDisplay.innerHTML = `${storeSettings.storeName} <br>
+    <small style="font-size: 12px; color: #666;">User: ${username} (${userRole})</small>`;
+  }
+
+  // if user is cashier, hide manager buttons
+  if (userRole === 'cashier') {
+    const managerElements = document.querySelectorAll('.manager-only');
+    managerElements.forEach(el => el.style.display = 'none');
+  }
+
   // only run after data arrives
   renderCart();
   updateTotals();
@@ -287,14 +318,17 @@ async function processCheckout() {
       unit_price: item.price,
     })),
     payment_method: "cash",
-    cashier_id: 1, // using store ID (ID: 1) for now
+    // cashier_id: 1, // using store ID (ID: 1) for now
   };
 
   try {
     // transmit the data via POST request
     const response = await fetch("http://localhost:8000/api/checkout", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`  // this is the badge the server will loook for
+      },
       body: JSON.stringify(payload), // convert JS object to JSON text
     });
 
@@ -326,3 +360,4 @@ const checkoutBtn = document.querySelector("#checkout-btn");
 checkoutBtn.addEventListener("click", () => {
   processCheckout();
 });
+

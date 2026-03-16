@@ -2,6 +2,13 @@ from fastapi import FastAPI
 from database import get_connection # importing database
 from pydantic import BaseModel # inspects comming data from the frontend to ensure match
 from fastapi.middleware.cors import CORSMiddleware # im port the guard
+from fastapi import Depends, HTTPException, status 
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
+from psycopg2.extras import RealDictCursor
+
+# from auth engine
+from auth import verify_password, create_access_token, SECRET_KEY, ALGORITHM
 
 app = FastAPI()
 
@@ -23,7 +30,33 @@ class CartItem(BaseModel):
 class CheckoutPayload(BaseModel):
   items: list[CartItem]
   payment_method: str 
-  cashier_id: int
+  # cashier_id: int
+
+class LoginRequest(BaseModel):
+  username: str
+  password: str
+
+# tells fastapi where the Login is
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
+
+# Guard 1: Checks if user is logged in AT ALL (Cashier or Manager)
+def get_current_user(token: str = Depends(oauth2_scheme)):
+  try:
+    # try to read the cryptographically signed badge
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    user_id: str = payload.get("sub")
+    if user_id is None:
+      raise HTTPException(status_code=401, detail="Invalid Credentials")
+    return payload    # Returns the dict: {sub, username, role}
+  except JWTError:
+    # If the badge is fake, tampered with, or expired, kick user out
+    raise HTTPException(status_code=401, detail="Invalid Credentials")
+
+# Guard 2: Checks if user is Manager spcifically
+def require_manager(current_user: dict = Depends(get_current_user)):
+  if current_user.get("role") != "manager":
+    raise HTTPException(status_code=403, detail="Manager access required")
+  return current_user
 
 
 # read how many products
@@ -169,6 +202,42 @@ def process_checkout(data: CheckoutPayload):
   
   finally:
     # closing
+    cursor.close()
+    conn.close()
+
+# The Login Route
+@app.post("/api/login")
+def login(req: LoginRequest):
+  conn = get_connection()
+  if not conn:
+    raise HTTPException(status_code=500, detail="Database Connection Failed")
+
+  try: 
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    # 1. Look up the user by username
+    cursor.execute("SELECT * FROM users WHERE username = %s", (req.username,))
+    user = cursor.fetchone()
+
+    # 2. Safety Check: if user doesn't exist OR password doesn't match hash
+    if not user or not verify_password(req.password, user['password_hash']):
+      raise HTTPException(status_code=401, detail="Invalid Credentials")
+
+    # 3. Success! Print JWT Badge
+    token_data = {
+      "sub": str(user['id']),
+      "username": user['username'],
+      "role": user['role']
+    }
+    access_token = create_access_token(data=token_data)
+
+    # 4. hand the badge to the front_end
+    return {
+      "access_token": access_token,
+      "token_type": "bearer",
+      "role": user['role'],
+      "username": user['username']
+    }
+  finally:
     cursor.close()
     conn.close()
 

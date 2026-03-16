@@ -38,5 +38,5 @@ INSERT INTO store_settings (store_name, tax_rate, currency_symbol, receipt_foote
 
 -- insert test users
 INSERT INTO users (username, password_hash, full_name, role, is_active) VALUES
-('admin', 'placeholder_will_be_hashed_in_module7', 'Evelyn Manager', 'manager', TRUE),
-('cashier1', 'placeholder_will_be_hashed_in_module7', 'Juan Cashier', 'cashier', TRUE);
+('admin', 'manager123', 'Evelyn Manager', 'manager', TRUE),
+('cashier1', 'cashier123', 'Juan Cashier', 'cashier', TRUE);
