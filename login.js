@@ -9,9 +9,12 @@ document.getElementById('btn-login').addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: user, password: pass })
     });
+
+    const result = await response.json();
+
     if (response.ok) {
       // Store the token in the sessionStorage
-      sessionStorage.setItem('token', result.access.token);
+      sessionStorage.setItem('token', result.access_token);
       sessionStorage.setItem('username', result.username);
       sessionStorage.setItem('role', result.role);
 
@@ -21,6 +24,6 @@ document.getElementById('btn-login').addEventListener('click', async () => {
       errorMsg.innerText = result.detail || "Invalid Credentials";
     }
   } catch (err) {
-    error.innerText = "Cannot connect to server. Is Python running?";
+    errorMsg.innerText = "Cannot connect to server. Is Python running?";
   }
 });
