@@ -6,7 +6,7 @@
   <title>Grocery POS System</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+ <body>
   <header class="top-bar">
     <div class="store-name">Store Name</div>
     <div class="date-time" id="current-date-time">date/time</div>
@@ -24,18 +24,8 @@
         <button class="tab-btn">Cooking Essentials</button>
       </div>
 
-      <div class="product-grid"> 
-       <!-- 
-        <button class="product-btn">Seedless Grapes<br><span>₱170.00</span></button>
-        <button class="product-btn">Ube Hopia Tipas<br><span>₱75.00</span></button>
-        <button class="product-btn">Sinandomeng Rice<br><span>₱1200.00</span></button>
-        <button class="product-btn">Jasmine-Red Rice<br><span>₱1150.00</span></button>
-        <button class="product-btn">Jasmine-Blue Rice<br><span>₱1300.00</span></button>
-        <button class="product-btn">Apple<br><span>₱140.00</span></button>
-        <button class="product-btn">Kiwi<br><span>₱130.00</span></button>
-        <button class="product-btn">Cooking Oil<br><span>₱95.00</span></button>
-      -->
-      </div>
+      <div class="product-grid">
+        </div>
 
     </section>
     
@@ -49,12 +39,29 @@
       </div>
 
       <div class="cart-items">...</div>
+        
+      <div class="discount-section manager-only" style="padding: 10px; border-top: 1px solid #ddd; background: #f9f9f9;">
+        <div style="margin-bottom: 5px; font-weight: bold; font-size: 14px;">Manager Discount</div>
+        <select id="discount-type" style="padding: 5px;">
+            <option value="fixed">Fixed Amount (₱)</option>
+            <option value="percentage">Percentage (%)</option>
+        </select>
+        <input type="text" id="discount-label" placeholder="e.g. Senior Citizen" style="padding: 5px; width: 140px;">
+        <input type="number" id="discount-value" placeholder="Amount" min="0" step="0.01" style="width: 80px; padding: 5px;">
+        <button id="apply-discount-btn" style="padding: 5px 10px; cursor: pointer;">Apply</button>
+        <button id="clear-discount-btn" style="padding: 5px 10px; cursor: pointer;">Clear</button>
+      </div>
 
       <div class="cart-totals">
 
         <div class="total-row">
           <span>Subtotal</span> 
           <span>₱0.00</span>
+        </div>
+
+        <div class="total-row discount-display-row" style="color: red; display: none;">
+          <span>Discount</span>
+          <span id="discount-display-amount">-₱0.00</span>
         </div>
 
         <div class="total-row">

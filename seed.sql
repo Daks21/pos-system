@@ -38,5 +38,5 @@ INSERT INTO store_settings (store_name, tax_rate, currency_symbol, receipt_foote
 
 -- insert test users
 INSERT INTO users (username, password_hash, full_name, role, is_active) VALUES
-('admin', 'manager123', 'Evelyn Manager', 'manager', TRUE),
-('cashier1', 'cashier123', 'Juan Cashier', 'cashier', TRUE);
+('admin', '$2b$12$H6axyEiWmnk17r1EyjlbUOJ9Hxp4sMfxla0Cnbb94Cr.yVZTex1/2', 'Evelyn Manager', 'manager', TRUE),
+('cashier1', '$2b$12$tG99aVawrpcVqgLoM5CaaOE4tJaedO.Gi7aSeCqsMrEcL1HkURLRu', 'Juan Cashier', 'cashier', TRUE);

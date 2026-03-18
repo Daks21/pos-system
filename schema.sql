@@ -41,6 +41,8 @@ CREATE TABLE transactions (
   total_amount  DECIMAL(10, 2) NOT NULL,
   payment_method VARCHAR(20) CHECK (payment_method IN ('cash', 'card', 'ewallet')),
   created_at    TIMESTAMPTZ DEFAULT NOW() -- Precision Timeclock
+  discount_amount DECIMAL(10,2) DEFAULT 0,  
+  discount_type   VARCHAR(20)               
 );
 
 CREATE TABLE transaction_lines (

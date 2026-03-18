@@ -6,8 +6,13 @@ if (!authToken) {
 }
 
 let storeSettings = {};
+  storeSettings.discountType = 'fixed';
+  storeSettings.discountValue = 0;
+  storeSettings.discountAmount = 0; // actual money subtracted
+  storeSettings.discountLabel = '';
 let cart = [];
 let products = [];
+
 
 // added 'productsData' inside the parentheses
 function renderProducts(productsData) {
@@ -22,6 +27,15 @@ function renderProducts(productsData) {
       </button>
     `;
   }).join("");
+}
+
+function filterAndRenderProducts(category) {
+  if (category === "All") {
+    renderProducts(products); // shows everything
+  } else {
+    const filtered = products.filter(p => p.category_name === category);
+    renderProducts(filtered);
+  }
 }
 
 function renderCart() {
@@ -64,20 +78,49 @@ function updateTotals() {
     return total + (item.price * item.quantity);
   }, 0); // 0 is the starting value
 
+  // calculate discount amount
+  storeSettings.discountAmount = 0;
+  if (storeSettings.discountValue > 0) {
+    if (storeSettings.discountType === 'percentage') {
+      storeSettings.discountAmount = subtotal * (storeSettings.discountValue / 100);
+    } else if (storeSettings.discountType === 'fixed') {
+      storeSettings.discountAmount = storeSettings.discountValue;
+    }
+  }
+
+  // safety check: discount cannot be larger than the subtotal
+  if (storeSettings.discountAmount > subtotal) {
+    storeSettings.discountAmount = subtotal;
+  }
+
+  // calculate tax and grand total
+  const taxableAmount = subtotal - storeSettings.discountAmount;
+
   // apply the formulas
-  const taxAmount = subtotal * storeSettings.taxRate;
-  const total = subtotal + taxAmount;
+  const taxAmount = taxableAmount * storeSettings.taxRate;
+  const total = taxableAmount + taxAmount;
 
   // update display gauges in the html
   // use query selector to find the exact <span> where the price lives
   const subtotalDisplay = document.querySelector(".total-row:nth-child(1) span:last-child");
-  const taxDisplay = document.querySelector(".total-row:nth-child(2) span:last-child");
+  const taxDisplay = document.querySelector(".total-row:nth-child(3) span:last-child");
   const grandTotalDisplay = document.querySelector(".grand-total span:last-child");
+
+  const discountRow = document.querySelector(".discount-display-row");
+  const discountDisplay = document.querySelector("#discount-display-amount");
 
   // set the test and format to 2 decimal places 
   if (subtotalDisplay) subtotalDisplay.textContent = `${storeSettings.currency}${subtotal.toFixed(2)}`;
   if (taxDisplay) taxDisplay.textContent = `${storeSettings.currency}${taxAmount.toFixed(2)}`;
   if (grandTotalDisplay) grandTotalDisplay.textContent = `${storeSettings.currency}${total.toFixed(2)}`; 
+
+  // show or hide discount row
+  if (storeSettings.discountAmount > 0) {
+    discountRow.style.display = "flex";
+    discountDisplay.textContent = `-${storeSettings.currency}${storeSettings.discountAmount.toFixed(2)}`;
+  } else {
+    discountRow.style.display = "none";
+    }
 }
 
 function addToCart (productId) {
@@ -225,6 +268,54 @@ if (logoutBtn) {
   });
 }
 
+// discount button listener
+const applyDiscountBtn = document.querySelector("#apply-discount-btn");
+if (applyDiscountBtn) {
+  applyDiscountBtn.addEventListener("click", () => {
+    const type = document.querySelector("#discount-type").value;
+    const value = parseFloat(document.querySelector("#discount-value").value);
+    const label = document.querySelector("#discount-label").value || "Discount"; 
+
+    if (value > 0) {
+      storeSettings.discountType = type;
+      storeSettings.discountValue = value;
+      storeSettings.discountLabel = label;
+      updateTotals(); // recalculate everything
+    }
+  });
+}
+
+// discount button listener
+const clearDiscountBtn = document.querySelector("#clear-discount-btn");
+if (clearDiscountBtn) {
+  clearDiscountBtn.addEventListener("click", () => {
+    storeSettings.discountValue = 0;
+    storeSettings.discountAmount = 0;
+    storeSettings.discountLabel = '';                                 
+    document.querySelector("#discount-value").value = "";
+    document.querySelector("#discount-label").value = "";    
+    updateTotals();
+  });
+}
+
+// category tabs listener
+const categoryTabs = document.querySelector(".category-tabs");
+categoryTabs.addEventListener("click", (event) => {
+  const tab = event.target.closest(".tab-btn");
+  if (!tab) return;
+
+  // remove active class from all tabs
+  document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+  
+  // add active class to clicked tab
+  tab.classList.add("active");
+
+  // filter products by tab label
+  const category = tab.textContent.trim();
+  filterAndRenderProducts(category);
+});
+
+
 /* =============================================================
   Async Functions
   ============================================================= */
@@ -238,15 +329,14 @@ async function loadSettings() {
     const dbSettings = await response.json();
 
     // the data adapter: translates postgreSQL snake_case into JS camelCase
-    storeSettings = {
-      taxRate: dbSettings.tax_rate,
-      storeName: dbSettings.store_name,
-      // fallback to "₱" just in case the database column is named differently
-      currency: dbSettings.currency_symbol || dbSettings.currency || "₱"
-    }
+    storeSettings.taxRate = dbSettings.tax_rate;
+    storeSettings.storeName = dbSettings.store_name;
+    // fallback to "₱" just in case the database column is named differently
+    storeSettings.currency = dbSettings.currency_symbol || dbSettings.currency || "₱";
+ 
     
     // update the store name on the Screen
-    const storeNameDisplay = document.querySelector(".header h1");
+    const storeNameDisplay = document.querySelector(".store-name");
     if (storeNameDisplay) storeNameDisplay.textContent = storeSettings.storeName;
 
   } catch (error) {
@@ -281,10 +371,14 @@ async function initPOS() {
   const username = sessionStorage.getItem('username');
 
   // update the UI to show who is logged in
-  const storeNameDisplay = document.querySelector(".header h1");
+  const storeNameDisplay = document.querySelector(".store-name");
   if (storeNameDisplay) {
-    storeNameDisplay.innerHTML = `${storeSettings.storeName} <br>
-    <small style="font-size: 12px; color: #666;">User: ${username} (${userRole})</small>`;
+    storeNameDisplay.textContent = storeSettings.storeName;
+  }
+
+  const cashierDisplay = document.querySelector(".cashier-info");
+  if (cashierDisplay) {
+    cashierDisplay.textContent = `${username} (${userRole})`;
   }
 
   // if user is cashier, hide manager buttons
@@ -318,7 +412,10 @@ async function processCheckout() {
       unit_price: item.price,
     })),
     payment_method: "cash",
-    // cashier_id: 1, // using store ID (ID: 1) for now
+    // send the discount info to python
+    discount_type: storeSettings.discountType || "none",
+    discount_value: storeSettings.discountValue || 0,
+    discount_amount: storeSettings.discountAmount || 0
   };
 
   try {
@@ -346,7 +443,7 @@ async function processCheckout() {
 
     } else {
       // the server rejected it (e.g., bad payment method)
-      alert("Checkout Faield: " + result.error);
+      alert("Checkout Failed: " + result.error);
     }
   } catch (error) {
     // emergency E-stop (e.g., server is offline)

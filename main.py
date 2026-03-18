@@ -30,7 +30,10 @@ class CartItem(BaseModel):
 class CheckoutPayload(BaseModel):
   items: list[CartItem]
   payment_method: str 
-  # cashier_id: int
+  # for discount feature
+  discount_type: str | None = None
+  discount_value: float = 0.0
+  discount_amount: float = 0.0  
 
 class LoginRequest(BaseModel):
   username: str
@@ -87,17 +90,19 @@ def get_products():
   conn = get_connection()
   cursor = conn.cursor()
 
-  # SQL query
-  cursor.execute("SELECT id, name, price, unit_type, stock_quantity, category_id FROM products WHERE is_active = TRUE")
-  rows = cursor.fetchall() # get all raw data
+  # JOIN with categories to get the category name
+  cursor.execute("""
+    SELECT p.id, p.name, p.price, p.unit_type, p.stock_quantity, 
+           p.category_id, c.name AS category_name
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    WHERE p.is_active = TRUE
+  """)
+  rows = cursor.fetchall()
 
-  # get the column names (the labels)
   column_names = [desc[0] for desc in cursor.description]
-
-  # zip the labels and the data together into a list of dictionaries
   products_list = [dict(zip(column_names, row)) for row in rows]
 
-  # close the valves
   cursor.close()
   conn.close()
 
@@ -142,7 +147,7 @@ def get_categories():
 
 # checkout endpoint
 @app.post("/api/checkout")
-def process_checkout(data: CheckoutPayload):
+def process_checkout(data: CheckoutPayload, current_user: dict = Depends(get_current_user)):
   conn = get_connection()
   cursor = conn.cursor()
 
@@ -154,17 +159,19 @@ def process_checkout(data: CheckoutPayload):
 
     # calculate subtotal by looping through items
     subtotal = sum(item.quantity * item.unit_price for item in data.items)
-    tax_amount = subtotal * tax_rate
-    total_amount =subtotal + tax_amount
+
+    taxable_amount = subtotal - data.discount_amount
+    tax_amount = taxable_amount * tax_rate
+    total_amount = taxable_amount + tax_amount
 
     # Insert into transaction (the master work order)
     cursor.execute(
       """
-      INSERT INTO transactions (user_id, subtotal, tax_amount, total_amount, payment_method)
-      VALUES (%s, %s, %s, %s, %s)
+      INSERT INTO transactions (user_id, subtotal, tax_amount, total_amount, payment_method, discount_type, discount_amount)
+      VALUES (%s, %s, %s, %s, %s, %s, %s)
       RETURNING id;
       """,
-      (data.cashier_id, subtotal, tax_amount, total_amount, data.payment_method)
+      (int(current_user["sub"]), subtotal, tax_amount, total_amount, data.payment_method, data.discount_type, data.discount_amount)
     )
     new_transaction_id = cursor.fetchone()[0] # grabs newly generated receipt id
     

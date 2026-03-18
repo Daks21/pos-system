@@ -88,22 +88,26 @@ body {
 
 .cart-panel {
   background: white;
-  border-left: 2px solid var(--color-dark); /* Needs: width style color */
+  border-left: 2px solid var(--color-dark);
   display: flex; 
   flex-direction: column;
   height: 100%;
+  overflow: hidden; 
 }
 
 .cart-items {
   flex: 1;                          /* Pushes the totals section to the bottom */
   overflow-y: auto;                 /* Adds a scrollbar only when items exceed the space */
   padding: 15px;
+  min-height: 0; 
+
 }
 
 .cart-totals {
   padding: 15px;
-  border-top: #fcfcfc;
-  border-top: 2px solid #eee;     /* label left, price right */  
+  border-top: 2px solid #eee;
+  flex-shrink: 0;                    /*  - prevents totals from shrinking */
+  background: white;
 }
 
 /*style the rows inside the totals area */
@@ -177,7 +181,11 @@ body {
   border-color: var(--color-primary);
 }
 
-
+.tab-btn.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
 
 
 /* ========================
