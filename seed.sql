@@ -35,8 +35,14 @@ INSERT INTO products (sku, name, price, category_id, unit_type, stock_quantity, 
 INSERT INTO store_settings (store_name, tax_rate, currency_symbol, receipt_footer, address) VALUES
 ('SEVEN EVELYN', 0.1200, '₱', 'Thank you for shopping at Seven Evelyn!', 'Pasig, Metro Manila');
 
+-- insert rate types
+INSERT INTO tax_rates (name, rate, description) VALUES
+('standard', 0.1200, 'Standard VAT rate'),
+('reduced',  0.0500, 'Reduced rate for selected items'),
+('exempt',   0.0000, 'Tax exempt items');
 
 -- insert test users
 INSERT INTO users (username, password_hash, full_name, role, is_active) VALUES
 ('admin', '$2b$12$H6axyEiWmnk17r1EyjlbUOJ9Hxp4sMfxla0Cnbb94Cr.yVZTex1/2', 'Evelyn Manager', 'manager', TRUE),
 ('cashier1', '$2b$12$tG99aVawrpcVqgLoM5CaaOE4tJaedO.Gi7aSeCqsMrEcL1HkURLRu', 'Juan Cashier', 'cashier', TRUE);
+

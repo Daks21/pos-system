@@ -12,7 +12,8 @@ CREATE TABLE products (
   category_id   INTEGER  REFERENCES categories(id),
   unit_type     VARCHAR(20) CHECK (unit_type IN ('quantity', 'weight')),
   stock_quantity DECIMAL(10, 3) DEFAULT 0, 
-  is_active     BOOLEAN DEFAULT TRUE
+  is_active     BOOLEAN DEFAULT TRUE,
+  tax_type       VARCHAR(20) DEFAULT 'standard' -- 'exempt' for fruits/vegies
 );
 
 CREATE TABLE store_settings (
@@ -40,7 +41,7 @@ CREATE TABLE transactions (
   tax_amount    DECIMAL(10, 2) NOT NULL,
   total_amount  DECIMAL(10, 2) NOT NULL,
   payment_method VARCHAR(20) CHECK (payment_method IN ('cash', 'card', 'ewallet')),
-  created_at    TIMESTAMPTZ DEFAULT NOW() -- Precision Timeclock
+  created_at    TIMESTAMPTZ DEFAULT NOW(), -- Precision Timeclock
   discount_amount DECIMAL(10,2) DEFAULT 0,  
   discount_type   VARCHAR(20)               
 );
@@ -52,4 +53,11 @@ CREATE TABLE transaction_lines (
   quantity      DECIMAL(10, 3) NOT NULL,
   unit_price    DECIMAL(10, 2) NOT NULL,
   line_total    DECIMAL(10, 2) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS tax_rates (
+  id          SERIAL PRIMARY KEY,
+  name        VARCHAR(50) NOT NULL,
+  rate        DECIMAL(5,4) NOT NULL,
+  description TEXT
 );

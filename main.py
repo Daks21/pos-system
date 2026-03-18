@@ -26,6 +26,7 @@ class CartItem(BaseModel):
   product_id: int
   quantity: float
   unit_price: float
+  tax_type: str = 'standard'
 
 class CheckoutPayload(BaseModel):
   items: list[CartItem]
@@ -93,7 +94,7 @@ def get_products():
   # JOIN with categories to get the category name
   cursor.execute("""
     SELECT p.id, p.name, p.price, p.unit_type, p.stock_quantity, 
-           p.category_id, c.name AS category_name
+           p.category_id, p.tax_type, c.name AS category_name
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id
     WHERE p.is_active = TRUE
@@ -152,43 +153,68 @@ def process_checkout(data: CheckoutPayload, current_user: dict = Depends(get_cur
   cursor = conn.cursor()
 
   try:
-    # recalculate totals (never trust frontend math)
-    cursor.execute("SELECT tax_rate FROM store_settings WHERE id = 1")
-    tax_rate_row = cursor.fetchone()
-    tax_rate = float(tax_rate_row[0]) if tax_rate_row else 0.12
+    # fetch all tax rates from the database into a lookup dictionary
+    # result will be: {'standard': 0.12, 'reduced': 0.05, 'exempt': 0.0}
+    cursor.execute("SELECT name, rate FROM tax_rates")
+    tax_rates_rows = cursor.fetchall()
+    tax_rates_lookup = {row[0]: float(row[1]) for row in tax_rates_rows}
 
-    # calculate subtotal by looping through items
-    subtotal = sum(item.quantity * item.unit_price for item in data.items)
+    # fallback in case tax_rates table is empty
+    if not tax_rates_lookup:
+      tax_rates_lookup = {'standard': 0.12, 'reduced': 0.05, 'exempt': 0.0}
 
+    # calculate subtotal and per-line tax
+    subtotal = 0
+    total_tax = 0
+
+    for item in data.items:
+      line_total = item.quantity * item.unit_price
+      subtotal += line_total
+
+      # look up this item's tax rate by its tax_type
+      # if tax_type is not found in lookup, fall back to standard rate
+      item_tax_rate = tax_rates_lookup.get(item.tax_type, tax_rates_lookup.get('standard', 0.12))
+      item_tax = line_total * item_tax_rate
+      total_tax += item_tax
+
+    # apply discount before final tax adjustment
     taxable_amount = subtotal - data.discount_amount
-    tax_amount = taxable_amount * tax_rate
-    total_amount = taxable_amount + tax_amount
+    
+    # recalculate tax on taxable amount proportionally
+    if subtotal > 0:
+      tax_ratio = total_tax / subtotal
+      adjusted_tax = taxable_amount * tax_ratio
+    else:
+      adjusted_tax = 0
 
-    # Insert into transaction (the master work order)
+    total_amount = taxable_amount + adjusted_tax
+
+    # insert the master transaction record
     cursor.execute(
       """
-      INSERT INTO transactions (user_id, subtotal, tax_amount, total_amount, payment_method, discount_type, discount_amount)
+      INSERT INTO transactions 
+        (user_id, subtotal, tax_amount, total_amount, payment_method, discount_type, discount_amount)
       VALUES (%s, %s, %s, %s, %s, %s, %s)
       RETURNING id;
       """,
-      (int(current_user["sub"]), subtotal, tax_amount, total_amount, data.payment_method, data.discount_type, data.discount_amount)
+      (int(current_user["sub"]), subtotal, adjusted_tax, total_amount, 
+       data.payment_method, data.discount_type, data.discount_amount)
     )
-    new_transaction_id = cursor.fetchone()[0] # grabs newly generated receipt id
-    
-    # loop through the cart to write lines and deduct stock
+    new_transaction_id = cursor.fetchone()[0]
+
+    # loop through items — insert lines and deduct stock
     for item in data.items:
       line_total = item.quantity * item.unit_price
 
-      # insert the line item
       cursor.execute(
         """
-        INSERT INTO transaction_lines (transaction_id, product_id, quantity, unit_price, line_total)
+        INSERT INTO transaction_lines 
+          (transaction_id, product_id, quantity, unit_price, line_total)
         VALUES (%s, %s, %s, %s, %s)
         """,
         (new_transaction_id, item.product_id, item.quantity, item.unit_price, line_total)
       )
 
-      # update the inventory
       cursor.execute(
         """
         UPDATE products
@@ -197,21 +223,18 @@ def process_checkout(data: CheckoutPayload, current_user: dict = Depends(get_cur
         """,
         (item.quantity, item.product_id)
       )
-    
-    # Save all changes permanently
+
     conn.commit()
     return {"success": True, "transaction_id": new_transaction_id}
 
   except Exception as e:
-    # The E-stop: undo everything if a single step failed
     conn.rollback()
     return {"success": False, "error": str(e)}
-  
+
   finally:
-    # closing
     cursor.close()
     conn.close()
-
+    
 # The Login Route
 @app.post("/api/login")
 def login(req: LoginRequest):

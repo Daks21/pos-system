@@ -143,7 +143,8 @@ function addToCart (productId) {
       id: product.id,
       name: product.name,
       price: product.price,
-      quantity: 1
+      quantity: 1,
+      tax_type: product.tax_type || 'standard'
     });
   }
   
@@ -410,6 +411,7 @@ async function processCheckout() {
       product_id: item.id,
       quantity: item.quantity,
       unit_price: item.price,
+      tax_type: item.tax_type || 'standard'
     })),
     payment_method: "cash",
     // send the discount info to python
