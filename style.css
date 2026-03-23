@@ -272,3 +272,50 @@ body {
     border-radius: 4px;
     box-sizing: border-box; /* Crucial for layout! */
 }
+
+
+
+/* ========================
+   Payment Method Selector
+   ======================== */
+
+.payment-method-selector {
+  margin-bottom: 15px;
+  margin-top: 10px;
+}
+
+.payment-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.payment-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.payment-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: var(--font-main);
+  transition: all 0.2s;
+  color: var(--color-text);
+}
+
+.payment-btn:hover {
+  border-color: var(--color-primary);
+  background-color: #f0f7ff;
+}
+
+.payment-btn.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}

@@ -235,6 +235,108 @@ def process_checkout(data: CheckoutPayload, current_user: dict = Depends(get_cur
     cursor.close()
     conn.close()
     
+# Get a single transaction by ID (for refund lookup)
+@app.get("/api/transactions/{transaction_id}")
+def get_transaction(transaction_id: int, current_user: dict = Depends(require_manager)):
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  try:
+    # get the master transaction record
+    cursor.execute("""
+      SELECT t.id, t.subtotal, t.tax_amount, t.total_amount,
+             t.payment_method, t.created_at, t.refund_status,
+             u.username AS cashier
+      FROM transactions t
+      JOIN users u ON t.user_id = u.id
+      WHERE t.id = %s
+    """, (transaction_id,))
+    row = cursor.fetchone()
+
+    # safety check: transaction not found
+    if not row:
+      raise HTTPException(status_code=404, detail="Transaction not found")
+
+    column_names = [desc[0] for desc in cursor.description]
+    transaction = dict(zip(column_names, row))
+
+    # get the line items for this transactions
+    cursor.execute("""
+      SELECT tl.quantity, tl.unit_price, tl.line_total,
+             p.name AS product_name, p.id AS product_id
+      FROM transaction_lines tl
+      JOIN products p ON tl.product_id = p.id
+      WHERE tl.transaction_id = %s
+    """, (transaction_id,))
+    lines = cursor.fetchall()
+    line_columns = [desc[0] for desc in cursor.description]
+    transaction["items"] = [dict(zip(line_columns, line)) for line in lines]
+
+    return transaction
+  
+  finally:
+    cursor.close()
+    conn.close()
+
+# process a refund
+@app.post("/api/refund/{transaction_id}")
+def process_refund(transaction_id: int, current_user: dict = Depends(require_manager)):
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  try:
+    # step 1: check transaction exists and is not already refunded
+    cursor.execute(
+      "SELECT id, refund_status FROM transactions WHERE id = %s",
+      (transaction_id,)
+    )
+    transaction = cursor.fetchone()
+
+    if not transaction:
+      raise HTTPException(status_code=404, detail="Transaction not found")
+
+    if transaction[1] == 'refunded':
+      raise HTTPException(status_code=400, detail="Transaction already refunded")
+
+    # Step 2: get all line items to restore stock
+    cursor.execute(
+      "SELECT product_id, quantity FROM transaction_lines WHERE transaction_id = %s",
+      (transaction_id,)
+    )
+    lines = cursor.fetchall()
+
+    # Step 3: restore stock for each item
+    for line in lines:
+      cursor.execute(
+        """
+        UPDATE products 
+        SET stock_quantity = stock_quantity + %s 
+        WHERE id = %s
+        """,
+        (line[1], line[0])
+      )
+
+    # Step 4: Mark transaction as refunded
+    cursor.execute(
+      "UPDATE transactions SET refund_status = 'refunded' WHERE id = %s",
+      (transaction_id,)
+    )
+
+    # step 5: commit everything together
+    conn.commit()
+    return {"success": True, "message": f"Transaction #{transaction_id} refunded successfully"}
+
+  except HTTPException:
+    raise   # re-raise HTTP exceptions without rolling back
+  except Exception as e:
+    conn.rollback()
+    return {"success": False, "error": str(e)}
+
+  finally:
+    cursor.close()
+    conn.close()
+
+
 # The Login Route
 @app.post("/api/login")
 def login(req: LoginRequest):

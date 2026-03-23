@@ -12,6 +12,8 @@ let storeSettings = {};
   storeSettings.discountLabel = '';
 let cart = [];
 let products = [];
+let selectedPaymentMethod = 'cash'; // defaults to cash
+
 
 
 // added 'productsData' inside the parentheses
@@ -316,6 +318,53 @@ categoryTabs.addEventListener("click", (event) => {
   filterAndRenderProducts(category);
 });
 
+// payment method listener
+const paymentButtons = document.querySelector(".payment-buttons");
+if (paymentButtons) {
+  paymentButtons.addEventListener("click", (event) => {
+    const btn = event.target.closest(".payment-btn");
+    if (!btn) return;
+
+    // remove active from all buttons
+    document.querySelectorAll(".payment-btn")
+      .forEach(b => b.classList.remove("active"));
+
+    // set active on clicked button
+    btn.classList.add("active");
+
+    // update state
+    selectedPaymentMethod = btn.dataset.method;
+    console.log("Payment method selected:", selectedPaymentMethod);
+  });
+}
+
+// hooking up the PAY button
+const checkoutBtn = document.querySelector("#checkout-btn");
+checkoutBtn.addEventListener("click", () => {
+  processCheckout();
+});
+
+// look up button listener
+const lookupBtn = document.querySelector("#lookup-transaction-btn");
+if (lookupBtn) {
+  lookupBtn.addEventListener("click", () => {
+    const transactionId = parseInt(document.querySelector("#refund-transaction-id").value);
+    if (!transactionId || transactionId < 1) {
+      alert("Please enter a valid Transaction ID");
+      return;
+    }
+    lookupTransaction(transactionId);
+  });
+}
+
+// confirm refund button listener
+const confirmRefundBtn = document.querySelector("#confirm-refund-btn");
+if (confirmRefundBtn) {
+  confirmRefundBtn.addEventListener("click", () => {
+    const transactionId = parseInt(document.querySelector("#refund-details").dataset.transactionId);
+    confirmRefund(transactionId);
+  });
+}
 
 /* =============================================================
   Async Functions
@@ -413,7 +462,7 @@ async function processCheckout() {
       unit_price: item.price,
       tax_type: item.tax_type || 'standard'
     })),
-    payment_method: "cash",
+    payment_method: selectedPaymentMethod,
     // send the discount info to python
     discount_type: storeSettings.discountType || "none",
     discount_value: storeSettings.discountValue || 0,
@@ -454,9 +503,87 @@ async function processCheckout() {
   }
 }
 
-// hooking up the PAY button
-const checkoutBtn = document.querySelector("#checkout-btn");
-checkoutBtn.addEventListener("click", () => {
-  processCheckout();
-});
+// look up a transaction by ID
+async function lookupTransaction(transactionId) {
+  try {
+    const response = await fetch(`http://localhost:8000/api/transactions/${transactionId}`, {
+      headers: {
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      alert(err.detail || "Transaction not found");
+      return;
+    }
+
+    const transaction = await response.json();
+
+    // check if already refunded
+    if (transaction.refund_status === 'refunded') {
+      alert(`Transaction #${transactionId} has already been refunded.`);
+      return;
+    }
+
+    // display transaction details
+    const detailsDiv = document.querySelector("#refund-details");
+    const infoDiv = document.querySelector("#refund-transaction-info");
+
+    // build the items list
+    const itemsList = transaction.items.map(item =>
+      `<div>${item.product_name} x${item.quantity} — 
+      ${storeSettings.currency}${parseFloat(item.line_total).toFixed(2)}</div>`
+    ).join("");
+
+    infoDiv.innerHTML = `
+      <strong>Transaction #${transaction.id}</strong><br>
+      Cashier: ${transaction.cashier}<br>
+      Total: ${storeSettings.currency}${parseFloat(transaction.total_amount).toFixed(2)}<br>
+      Payment: ${transaction.payment_method}<br>
+      <div style="margin-top: 6px; font-size: 12px;">${itemsList}</div>
+    `;
+
+    // store the ID for confirm button
+    detailsDiv.dataset.transactionId = transaction.id;
+    detailsDiv.style.display = "block";
+
+  } catch (error) {
+    console.error("Lookup failed:", error);
+    alert("Could not connect to server.");
+  }
+}
+
+// confirm and process the refund
+async function confirmRefund(transactionId) {
+  if (!confirm(`Are you sure you want to refund Transaction #${transactionId}? This cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://localhost:8000/api/refund/${transactionId}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      alert(`✅ ${result.message}`);
+      // reset the refund panel
+      document.querySelector("#refund-transaction-id").value = "";
+      document.querySelector("#refund-details").style.display = "none";
+    } else {
+      alert("Refund failed: " + result.error);
+    }
+
+  } catch (error) {
+    console.error("Refund failed:", error);
+    alert("Could not connect to server.");
+  }
+}
+
+
 

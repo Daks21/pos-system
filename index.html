@@ -35,8 +35,28 @@
         <span>Current Sale</span>
         <button id="clear-sale-btn" class="clear-btn manager-only">Clear Sale</button>
         <button id="logout-user-btn" class="logout-btn">Logout</button>
-
       </div>
+
+      <!-- Refund Section — manager only -->
+      <div class="refund-section manager-only" style="padding: 10px; border-bottom: 1px solid #ddd; background: #fff8f8;">
+        <div style="font-weight: bold; font-size: 14px; margin-bottom: 8px;">🔄 Process Refund</div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="number" id="refund-transaction-id" placeholder="Transaction ID" 
+            min="1" style="width: 130px; padding: 5px;">
+          <button id="lookup-transaction-btn" style="padding: 5px 10px; cursor: pointer;">Look Up</button>
+        </div>
+
+        <!-- transaction details shown after lookup -->
+        <div id="refund-details" style="display: none; margin-top: 10px; padding: 8px; background: #f9f9f9; border-radius: 4px; font-size: 13px;">
+          <div id="refund-transaction-info"></div>
+          <button id="confirm-refund-btn" style="margin-top: 8px; padding: 6px 12px; background: #ff4d4d; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
+            Confirm Refund
+          </button>
+        </div>
+      </div>
+
+
+
 
       <div class="cart-items">...</div>
         
@@ -72,6 +92,15 @@
         <div class="total-row grand-total">
           <span>Total</span>
           <span>₱0.00</span>
+        </div>
+
+        <div class="payment-method-selector">
+          <div class="payment-label">Payment Method</div>
+          <div class="payment-buttons">
+            <button class="payment-btn active" data-method="cash">Cash</button>
+            <button class="payment-btn" data-method="card">Card</button>
+            <button class="payment-btn" data-method="ewallet">E-Wallet</button>
+          </div>
         </div>
 
         <button id="checkout-btn" class="pay-btn">PROCESS PAYMENT</button>
