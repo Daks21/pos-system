@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grocery POS System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
  <body>
@@ -37,63 +39,67 @@
         <button id="logout-user-btn" class="logout-btn">Logout</button>
       </div>
 
-      <!-- Refund Section — manager only -->
-      <div class="refund-section manager-only" style="padding: 10px; border-bottom: 1px solid #ddd; background: #fff8f8;">
-        <div style="font-weight: bold; font-size: 14px; margin-bottom: 8px;">🔄 Process Refund</div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="number" id="refund-transaction-id" placeholder="Transaction ID" 
-            min="1" style="width: 130px; padding: 5px;">
-          <button id="lookup-transaction-btn" style="padding: 5px 10px; cursor: pointer;">Look Up</button>
+      <!-- Hold Transaction Section -->
+      <div class="hold-section">
+        <div class="hold-section-row">
+          <input type="text" id="hold-label" class="hold-label-input" placeholder="Hold label (optional)">
+          <button id="hold-sale-btn" class="hold-sale-btn">Hold Sale</button>
         </div>
+        <div class="hold-footer-row">
+          <span class="hold-footer-label">Held Sales</span>
+          <button id="view-holds-btn" class="view-holds-btn">View Held Sales</button>
+        </div>
+        <div id="held-sales-list" class="held-sales-list"></div>
+      </div>
 
-        <!-- transaction details shown after lookup -->
-        <div id="refund-details" style="display: none; margin-top: 10px; padding: 8px; background: #f9f9f9; border-radius: 4px; font-size: 13px;">
+      <!-- Refund Section — manager only -->
+      <div class="refund-section manager-only">
+        <div class="refund-title">🔄 Process Refund</div>
+        <div class="refund-input-row">
+          <input type="number" id="refund-transaction-id" class="refund-id-input" 
+            placeholder="Transaction ID" min="1">
+          <button id="lookup-transaction-btn" class="lookup-btn">Look Up</button>
+        </div>
+        <div id="refund-details" class="refund-details">
           <div id="refund-transaction-info"></div>
-          <button id="confirm-refund-btn" style="margin-top: 8px; padding: 6px 12px; background: #ff4d4d; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
-            Confirm Refund
-          </button>
+          <button id="confirm-refund-btn" class="confirm-refund-btn">Confirm Refund</button>
         </div>
       </div>
 
-
-
-
       <div class="cart-items">...</div>
-        
-      <div class="discount-section manager-only" style="padding: 10px; border-top: 1px solid #ddd; background: #f9f9f9;">
-        <div style="margin-bottom: 5px; font-weight: bold; font-size: 14px;">Manager Discount</div>
-        <input type="text" id="discount-label" placeholder="e.g. Senior Citizen" style="padding: 5px; width: 140px;">
-        <select id="discount-type" style="padding: 5px;">
-            <option value="fixed">Fixed Amount (₱)</option>
-            <option value="percentage">Percentage (%)</option>
+
+      <!-- Discount Section — manager only -->
+      <div class="discount-section manager-only">
+        <div class="discount-title">Manager Discount</div>
+        <input type="text" id="discount-label" class="discount-label-input" 
+          placeholder="e.g. Senior Citizen">
+        <select id="discount-type" class="discount-type-select">
+          <option value="fixed">Fixed Amount (₱)</option>
+          <option value="percentage">Percentage (%)</option>
         </select>
-        <input type="number" id="discount-value" placeholder="Amount" min="0" step="0.01" style="width: 80px; padding: 5px;">
-        <button id="apply-discount-btn" style="padding: 5px 10px; cursor: pointer;">Apply</button>
-        <button id="clear-discount-btn" style="padding: 5px 10px; cursor: pointer;">Clear</button>
+        <input type="number" id="discount-value" class="discount-value-input" 
+          placeholder="Amount" min="0" step="0.01">
+        <button id="apply-discount-btn" class="apply-discount-btn">Apply</button>
+        <button id="clear-discount-btn" class="clear-discount-btn">Clear</button>
       </div>
 
       <div class="cart-totals">
-
         <div class="total-row">
-          <span>Subtotal</span> 
+          <span>Subtotal</span>
           <span>₱0.00</span>
         </div>
-
         <div class="total-row discount-display-row" style="color: red; display: none;">
           <span>Discount</span>
           <span id="discount-display-amount">-₱0.00</span>
         </div>
-
         <div class="total-row">
           <span>Tax (12%)</span>
           <span>₱0.00</span>
         </div>
-
         <div class="total-row grand-total">
           <span>Total</span>
           <span>₱0.00</span>
         </div>
-
         <div class="payment-method-selector">
           <div class="payment-label">Payment Method</div>
           <div class="payment-buttons">
@@ -102,7 +108,6 @@
             <button class="payment-btn" data-method="ewallet">E-Wallet</button>
           </div>
         </div>
-
         <button id="checkout-btn" class="pay-btn">PROCESS PAYMENT</button>
       </div>
 

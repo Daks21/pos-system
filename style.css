@@ -1,321 +1,1128 @@
+/* ============================================================
+   SEVEN EVELYN POS — Production Stylesheet
+   Design: Industrial-Refined Retail
+   Optimized for MSME daily operations
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+/* ========================
+   Design Tokens
+   ======================== */
 :root {
-  --color-primary: #1F5FAD;
-  --color-dark: #12253D;
-  --color-bg: #F4F6F9;
-  --color-success: #1A7A48;
-  --color-text: #3A3A3A;
-  --font-main: "Segoe UI", Arial, sans-serif;
+  /* Core Palette */
+  --navy-900:   #0A1628;
+  --navy-800:   #0F2240;
+  --navy-700:   #152E54;
+  --navy-600:   #1A3A68;
+  --blue-500:   #1F5FAD;
+  --blue-400:   #2E76D4;
+  --blue-100:   #DBEAFE;
+  --blue-50:    #EFF6FF;
+
+  /* Success — Pay button */
+  --green-700:  #0F5C2E;
+  --green-600:  #14803C;
+  --green-500:  #1A9B4B;
+  --green-100:  #DCFCE7;
+  --green-50:   #F0FDF4;
+
+  /* Danger — Refund */
+  --red-600:    #C0152A;
+  --red-500:    #DC2626;
+  --red-100:    #FEE2E2;
+  --red-50:     #FFF5F5;
+
+  /* Neutral */
+  --slate-900:  #0F172A;
+  --slate-700:  #334155;
+  --slate-500:  #64748B;
+  --slate-400:  #94A3B8;
+  --slate-300:  #CBD5E1;
+  --slate-200:  #E2E8F0;
+  --slate-100:  #F1F5F9;
+  --slate-50:   #F8FAFC;
+  --white:      #FFFFFF;
+
+  /* Amber — Hold */
+  --amber-600:  #B45309;
+  --amber-100:  #FEF3C7;
+  --amber-50:   #FFFBEB;
+
+  /* Typography */
+  --font-ui:    'DM Sans', 'Segoe UI', Arial, sans-serif;
+  --font-mono:  'DM Mono', 'Consolas', monospace;
+
+  /* Spacing Scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+
+  /* Radius */
+  --r-sm:  4px;
+  --r-md:  8px;
+  --r-lg:  12px;
+  --r-xl:  16px;
+  --r-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg:  0 10px 25px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
+
+  /* Transitions */
+  --t-fast:   0.12s ease;
+  --t-normal: 0.2s ease;
+  --t-slow:   0.3s ease;
+
+  /* Legacy aliases (keeps old code working) */
+  --color-primary:  var(--blue-500);
+  --color-dark:     var(--navy-800);
+  --color-bg:       var(--slate-100);
+  --color-success:  var(--green-600);
+  --color-text:     var(--slate-900);
+  --font-main:      var(--font-ui);
 }
 
-* { 
-  margin: 0; 
-  padding: 0; 
-  box-sizing: border-box; 
+/* ========================
+   Reset & Base
+   ======================== */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  background-color: var(--color-bg);
-  font-family: var(--font-main);
-  height: 100vh; 
-  overflow: hidden;                 /* "No scroll" - keeps the POS locked to the screen */
+  background-color: var(--slate-100);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--slate-900);
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* ========================
+   Top Command Bar
+   ======================== */
 .top-bar {
-  display: flex;                    /* Activates the "Magnetic Rail" */
-  justify-content: space-between;   /* Pushes items to the far left, center, and far right */
-  align-items: center;              /* Centers items vertically within the bar */
-  
-  padding: 0 20px;                  /* 0 top/bottom, 20px left/right */
-  height: 60px;                     /* Fixed height for our header */
-  background-color: var(--color-dark);
-  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--sp-5);
+  height: 56px;
+  min-height: 56px;
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%);
+  color: var(--white);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  position: relative;
+  z-index: 10;
+
+  /* Subtle grid texture */
+  background-image:
+    linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 20px,
+      rgba(255,255,255,0.012) 20px,
+      rgba(255,255,255,0.012) 21px
+    );
 }
 
+/* Accent line at bottom of top bar */
+.top-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue-400), var(--green-500), var(--blue-400));
+  opacity: 0.6;
+}
+
+.store-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--white);
+}
+
+.date-time {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.02em;
+  background: rgba(255,255,255,0.06);
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.cashier-info {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.cashier-info::before {
+  content: '●';
+  color: var(--green-500);
+  font-size: 8px;
+}
+
+/* ========================
+   Main Layout Grid
+   ======================== */
 .pos-layout {
   display: grid;
-  grid-template-columns: 60fr 40fr; /* 60% left, 40% right*/
-  height: calc(100vh - 60px); 
+  grid-template-columns: 60fr 40fr;
+  height: calc(100vh - 56px);
+  gap: 0;
 }
 
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 10px;
-  padding: 10px;
-}
-
-.product-btn {
-  background-color: white;
-  border: 1px solid #ddd;         /* Adds a thin "machined" edge */
-  border-radius: 8px;
-  height: 80px;
-  padding: 10px;
-  cursor: pointer;                  /* Changes the mouse to a hand—very important! */
-
-  /* The "Alignment Engine" */
+/* ========================
+   Product Panel (Left)
+   ======================== */
+.product-panel {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
-  /* Text Styling */
-  font-weight: 600;
-  color: var(--color-text);
-  transition: all 0.2s;             /* Smooths out the "movement" when hovering */
+  background: var(--slate-100);
+  overflow: hidden;
 }
 
-.product-btn span {
-  color: var(--color-text);
-  font-size: 0.9rem;
-  margin-top: 5px;
-}
-
-/* When the mouse is over the button */
-.product-btn:hover {
-  background-color: #f0f7ff;
-  border-color: var(--color-primary);
-  transform: translateY(-2px);      /* Lifts the button up slightly */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* adds a subtle shadow */
-}
-
-/* When the button is actually being pressed */
-.product-btn:active {
-  transform: scale(0.95);           /* Shrinks the button slightly (the "click" feel) */
-  box-shadow: none; 
-}
-
-.cart-panel {
-  background: white;
-  border-left: 2px solid var(--color-dark);
-  display: flex; 
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden; 
-}
-
-.cart-items {
-  flex: 1;                          /* Pushes the totals section to the bottom */
-  overflow-y: auto;                 /* Adds a scrollbar only when items exceed the space */
-  padding: 15px;
-  min-height: 0; 
-
-}
-
-.cart-totals {
-  padding: 15px;
-  border-top: 2px solid #eee;
-  flex-shrink: 0;                    /*  - prevents totals from shrinking */
-  background: white;
-}
-
-/*style the rows inside the totals area */
-.total-row {
-  display: flex;
-  justify-content: space-between;   /* Label left, Price right */
-  margin-bottom: 10px;
-  color: var(--color-text);
-}
-
-.grand-total {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 2px dashed #ddd;    /* A "tear-off" receipt look */
-  font-size: 1.4rem;
-  font-weight: bold;
-  color: var(--color-dark)
-}
-
-.pay-btn {
-  width: 100%;                      /* Standard for "full width" */
-  height: 70px;
-  background-color: var(--color-success);
-  color: white;
-  font-weight: bold;
-  font-size: 1.2rem;                /* Make the text larger than regular buttons */
-  border: none;                     /* Removes the default gray border */
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;        /* Makes the hover effect smooth */
-  margin-top: 15px;                 /* Adds space from the totals above it */
-}
-
-.pay-btn:hover {
-  background-color: #145d37;      /* A slightly darker green when hovering */
-  transform: translateY(-2px);      /* Subtle "lift" effect */
-  box-shadow: 0 4px 12px rgba(26, 122, 72, 0.3); /* Adds a green-tinted glow */
-}
-
-.pay-btn:active {
-  transform: scale(0.97);           /* The "Mechanical Click" — button shrinks slightly when pressed */
-  box-shadow: none;                 /* Shadow disappears when the button is "pushed" down */
-}
-
+/* ========================
+   Category Tabs
+   ======================== */
 .category-tabs {
   display: flex;
-  gap: 10px;
-  padding: 15px;
-  background: white;
-  border-bottom: 1px solid #eee;  /* A subtle seam to separate tabs from products */
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--white);
+  border-bottom: 1px solid var(--slate-200);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+  flex-shrink: 0;
+
+  /* Hide scrollbar but keep scroll */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.category-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  border-radius: 20px; 
-  background: white;
+  padding: 6px 16px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--r-pill);
+  background: var(--white);
   cursor: pointer;
-  font-family: var(--font-main);
-  transition: 0.3s;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--slate-500);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: all var(--t-normal);
 }
 
 .tab-btn:hover {
-  background-color: #f0f0f0;
-  border-color: var(--color-primary);
-}
-
-.tab-btn:active {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+  background: var(--blue-50);
+  border-color: var(--blue-400);
+  color: var(--blue-500);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .tab-btn.active {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+  background: var(--navy-800);
+  border-color: var(--navy-800);
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(15,34,64,0.3);
 }
 
+/* ========================
+   Product Grid
+   ======================== */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  overflow-y: auto;
+  align-content: start;
+}
+
+/* Custom scrollbar for product grid */
+.product-grid::-webkit-scrollbar {
+  width: 4px;
+}
+.product-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+.product-grid::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: var(--r-pill);
+}
+
+.product-btn {
+  background: var(--white);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--r-lg);
+  height: 82px;
+  padding: var(--sp-3) var(--sp-2);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--slate-700);
+  text-align: center;
+  line-height: 1.3;
+  transition: all var(--t-normal);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle shine effect on product buttons */
+.product-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.product-btn span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--blue-500);
+  margin-top: 2px;
+}
+
+.product-btn:hover {
+  background: var(--blue-50);
+  border-color: var(--blue-400);
+  color: var(--navy-800);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.product-btn:hover span {
+  color: var(--navy-800);
+}
+
+.product-btn:active {
+  transform: scale(0.95) translateY(0);
+  box-shadow: none;
+  background: var(--blue-100);
+}
 
 /* ========================
- Quantity Buttons renderCart funtion
- ========================= */
+   Cart Panel (Right)
+   ======================== */
+.cart-panel {
+  background: var(--white);
+  border-left: 1px solid var(--slate-200);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  box-shadow: -4px 0 16px rgba(0,0,0,0.04);
+}
 
- .qty-controls {
+/* ========================
+   Cart Header
+   ======================== */
+.cart-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 5px;
- }
+  gap: var(--sp-2);
+  padding: 10px var(--sp-4);
+  border-bottom: 1px solid var(--slate-200);
+  background: var(--navy-900);
+  flex-shrink: 0;
+  min-height: 48px;
+}
 
- .qty-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background: white;
+.cart-header span {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.9);
+}
+
+/* ========================
+   Clear Sale Button
+   ======================== */
+.clear-btn {
+  background: transparent;
+  border: 1px solid rgba(255,77,77,0.5);
+  color: #ff6b6b;
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all var(--t-fast);
+  letter-spacing: 0.03em;
+}
+
+.clear-btn:hover {
+  background: #ff4d4d;
+  border-color: #ff4d4d;
+  color: var(--white);
+}
+
+/* ========================
+   Logout Button
+   ======================== */
+.logout-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.6);
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+
+.logout-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--white);
+  border-color: rgba(255,255,255,0.4);
+}
+
+/* ========================
+   Hold Transaction Section
+   ======================== */
+.hold-section {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--slate-200);
+  background: var(--amber-50);
+  flex-shrink: 0;
+}
+
+.hold-section-row {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  margin-bottom: var(--sp-2);
+}
+
+.hold-label-input {
+  flex: 1;
+  padding: 5px 10px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--r-sm);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--slate-700);
+  background: var(--white);
+  transition: border-color var(--t-fast);
+  min-width: 0;
+}
+
+.hold-label-input:focus {
+  outline: none;
+  border-color: var(--blue-400);
+  box-shadow: 0 0 0 2px var(--blue-100);
+}
+
+.hold-label-input::placeholder {
+  color: var(--slate-400);
+}
+
+.hold-sale-btn {
+  padding: 5px 12px;
+  cursor: pointer;
+  background: var(--amber-600);
+  color: var(--white);
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+}
+
+.hold-sale-btn:hover {
+  background: #92400E;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.hold-sale-btn:active {
+  transform: scale(0.97);
+}
+
+.hold-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hold-footer-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--amber-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.view-holds-btn {
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--amber-600);
+  border-radius: var(--r-sm);
+  background: var(--white);
+  font-family: var(--font-ui);
+  color: var(--amber-600);
+  transition: all var(--t-fast);
+}
+
+.view-holds-btn:hover {
+  background: var(--amber-600);
+  color: var(--white);
+}
+
+.held-sales-list {
+  display: none;
+  margin-top: var(--sp-2);
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+/* ========================
+   Refund Section
+   ======================== */
+.refund-section {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--red-100);
+  background: var(--red-50);
+  flex-shrink: 0;
+}
+
+.refund-title {
+  font-weight: 700;
+  font-size: 0.72rem;
+  margin-bottom: var(--sp-2);
+  color: var(--red-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.refund-input-row {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.refund-id-input {
+  width: 120px;
+  padding: 5px 10px;
+  border: 1px solid var(--red-100);
+  border-radius: var(--r-sm);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--slate-700);
+  background: var(--white);
+  transition: border-color var(--t-fast);
+}
+
+.refund-id-input:focus {
+  outline: none;
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 2px var(--red-100);
+}
+
+.lookup-btn {
+  padding: 5px 12px;
+  cursor: pointer;
+  border: 1px solid var(--slate-300);
+  border-radius: var(--r-sm);
+  background: var(--white);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--slate-700);
+  transition: all var(--t-fast);
+}
+
+.lookup-btn:hover {
+  border-color: var(--blue-400);
+  color: var(--blue-500);
+  background: var(--blue-50);
+}
+
+.refund-details {
+  display: none;
+  margin-top: var(--sp-2);
+  padding: var(--sp-3);
+  background: var(--white);
+  border-radius: var(--r-md);
+  font-size: 0.75rem;
+  border: 1px solid var(--red-100);
+  color: var(--slate-700);
+  line-height: 1.6;
+}
+
+.confirm-refund-btn {
+  margin-top: var(--sp-2);
+  padding: 7px var(--sp-3);
+  background: var(--red-500);
+  color: var(--white);
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: all var(--t-fast);
+  letter-spacing: 0.02em;
+}
+
+.confirm-refund-btn:hover {
+  background: var(--red-600);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220,38,38,0.3);
+}
+
+.confirm-refund-btn:active {
+  transform: scale(0.98);
+}
+
+/* ========================
+   Cart Items List
+   ======================== */
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-3) var(--sp-4);
+  min-height: 0;
+  background: var(--white);
+}
+
+.cart-items::-webkit-scrollbar {
+  width: 3px;
+}
+.cart-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cart-items::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: var(--r-pill);
+}
+
+/* Empty cart message */
+.empty-msg {
+  text-align: center;
+  color: var(--slate-400);
+  font-size: 0.8rem;
+  padding: var(--sp-5) 0;
+  font-style: italic;
+}
+
+/* Cart item rows */
+.cart-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.cart-item-row:last-child {
+  border-bottom: none;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-info strong {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--slate-900);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-total {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--slate-700);
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: var(--slate-400);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px 4px;
+  border-radius: var(--r-sm);
+  transition: all var(--t-fast);
+  line-height: 1;
+}
+
+.remove-btn:hover {
+  background: var(--red-100);
+  color: var(--red-500);
+}
+
+/* ========================
+   Quantity Controls
+   ======================== */
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.qty-controls span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--slate-700);
+  min-width: 16px;
+  text-align: center;
+}
+
+.qty-controls small {
+  font-size: 0.7rem;
+  color: var(--slate-400);
+  margin-left: 2px;
+}
+
+.qty-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--slate-200);
+  background: var(--white);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
- }
-
- .qty-btn:hover {
-  background-color: #f0f0f0;
- }
-
-
-
-
-
-
-
- /* ========================
-    Clear Sale Button
- ========================= */
-
- .clear-btn {
-  background: none;
-  border: 1px solid #ff4d4d;
-  color:  #ff4d4d;
-  padding: 4px 8px;
-  border-radius: 4px;
+  font-weight: 700;
   font-size: 0.8rem;
+  color: var(--slate-500);
+  transition: all var(--t-fast);
+  flex-shrink: 0;
+}
+
+.qty-btn:hover {
+  background: var(--navy-800);
+  border-color: var(--navy-800);
+  color: var(--white);
+}
+
+.qty-btn:active {
+  transform: scale(0.9);
+}
+
+/* ========================
+   Discount Section
+   ======================== */
+.discount-section {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--slate-200);
+  background: var(--slate-50);
+  flex-shrink: 0;
+}
+
+.discount-title {
+  margin-bottom: var(--sp-2);
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.discount-label-input,
+.discount-type-select,
+.discount-value-input {
+  padding: 4px 8px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--r-sm);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  color: var(--slate-700);
+  background: var(--white);
+  transition: border-color var(--t-fast);
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.discount-label-input {
+  width: 130px;
+}
+
+.discount-value-input {
+  width: 70px;
+}
+
+.discount-label-input:focus,
+.discount-type-select:focus,
+.discount-value-input:focus {
+  outline: none;
+  border-color: var(--blue-400);
+  box-shadow: 0 0 0 2px var(--blue-100);
+}
+
+.apply-discount-btn,
+.clear-discount-btn {
+  padding: 4px 10px;
   cursor: pointer;
-  transition: all 0.2s;
- }
-
- .clear-btn:hover {
-  background-color: #ff4d4d;
-  color: white;
- }
-
-
- /* ========================
-    Login html
- ========================= */
- .login-body {
-    background-color: #f4f4f9;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--r-sm);
+  background: var(--white);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--slate-600);
+  transition: all var(--t-fast);
+  margin-right: 4px;
 }
 
-.login-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    text-align: center;
-    width: 300px;
+.apply-discount-btn:hover {
+  background: var(--blue-500);
+  color: var(--white);
+  border-color: var(--blue-500);
 }
 
-.login-card input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box; /* Crucial for layout! */
+.clear-discount-btn:hover {
+  background: var(--red-500);
+  color: var(--white);
+  border-color: var(--red-500);
 }
 
+/* ========================
+   Cart Totals Section
+   ======================== */
+.cart-totals {
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border-top: 2px solid var(--slate-200);
+  flex-shrink: 0;
+  background: var(--white);
+}
 
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  color: var(--slate-500);
+  font-size: 0.78rem;
+}
+
+.total-row span:first-child {
+  font-weight: 500;
+}
+
+.total-row span:last-child {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--slate-700);
+}
+
+/* Discount row */
+.discount-display-row {
+  color: var(--red-500) !important;
+}
+
+.discount-display-row span {
+  color: var(--red-500) !important;
+  font-weight: 600 !important;
+}
+
+/* Grand Total */
+.grand-total {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 2px dashed var(--slate-200);
+  font-size: 1.35rem !important;
+}
+
+.grand-total span:first-child {
+  font-weight: 800 !important;
+  color: var(--navy-800) !important;
+  letter-spacing: 0.01em;
+}
+
+.grand-total span:last-child {
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  color: var(--navy-800) !important;
+  font-size: 1.35rem;
+}
 
 /* ========================
    Payment Method Selector
    ======================== */
-
 .payment-method-selector {
-  margin-bottom: 15px;
-  margin-top: 10px;
+  margin: var(--sp-3) 0 var(--sp-2);
 }
 
 .payment-label {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 8px;
-  font-weight: 600;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--slate-400);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .payment-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .payment-btn {
   flex: 1;
-  padding: 8px 4px;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  background: white;
+  padding: 7px 4px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--r-md);
+  background: var(--white);
   cursor: pointer;
-  font-size: 0.8rem;
-  font-family: var(--font-main);
-  transition: all 0.2s;
-  color: var(--color-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  color: var(--slate-500);
+  transition: all var(--t-normal);
+  letter-spacing: 0.02em;
 }
 
 .payment-btn:hover {
-  border-color: var(--color-primary);
-  background-color: #f0f7ff;
+  border-color: var(--blue-400);
+  color: var(--blue-500);
+  background: var(--blue-50);
 }
 
 .payment-btn.active {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+  background: var(--navy-800);
+  color: var(--white);
+  border-color: var(--navy-800);
+  box-shadow: 0 2px 6px rgba(15,34,64,0.25);
+}
+
+/* ========================
+   Process Payment Button
+   ======================== */
+.pay-btn {
+  width: 100%;
+  height: 58px;
+  background: linear-gradient(135deg, var(--green-600) 0%, var(--green-700) 100%);
+  color: var(--white);
+  font-weight: 800;
+  font-size: 1rem;
+  font-family: var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: all var(--t-normal);
+  margin-top: var(--sp-3);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(20,128,60,0.35);
+}
+
+/* Shine effect on PAY button */
+.pay-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.pay-btn:hover::before {
+  left: 150%;
+}
+
+.pay-btn:hover {
+  background: linear-gradient(135deg, var(--green-500) 0%, var(--green-600) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(20,128,60,0.4);
+}
+
+.pay-btn:active {
+  transform: scale(0.98) translateY(0);
+  box-shadow: 0 2px 6px rgba(20,128,60,0.25);
+}
+
+/* ========================
+   Login Page
+   ======================== */
+.login-body {
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 60%, var(--navy-600) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Decorative background pattern */
+.login-body::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at center, rgba(31,95,173,0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.login-card {
+  background: var(--white);
+  padding: 2.5rem 2rem;
+  border-radius: var(--r-xl);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.35), 0 8px 24px rgba(0,0,0,0.2);
+  text-align: center;
+  width: 320px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Accent top border on login card */
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue-400), var(--green-500));
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+}
+
+.login-card h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--navy-800);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.login-card p {
+  font-size: 0.8rem;
+  color: var(--slate-400);
+  margin-bottom: var(--sp-5);
+}
+
+.login-card input {
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: var(--sp-3);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--slate-900);
+  background: var(--slate-50);
+  box-sizing: border-box;
+  transition: all var(--t-fast);
+}
+
+.login-card input:focus {
+  outline: none;
+  border-color: var(--blue-400);
+  background: var(--white);
+  box-shadow: 0 0 0 3px var(--blue-100);
+}
+
+.login-card input::placeholder {
+  color: var(--slate-400);
+}
+
+/* Login button */
+#btn-login {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--navy-800) 0%, var(--navy-700) 100%);
+  color: var(--white);
+  border: none;
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--t-normal);
+  box-shadow: 0 4px 12px rgba(15,34,64,0.3);
+  margin-top: var(--sp-1);
+}
+
+#btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15,34,64,0.4);
+  background: linear-gradient(135deg, var(--navy-700) 0%, var(--navy-600) 100%);
+}
+
+#btn-login:active {
+  transform: scale(0.98);
+}
+
+/* ========================
+   Login Error Message
+   ======================== */
+.login-error-msg {
+  color: var(--red-500);
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-bottom: var(--sp-3);
+  min-height: 20px;
+  text-align: center;
 }

@@ -366,6 +366,34 @@ if (confirmRefundBtn) {
   });
 }
 
+// hold sale button listener
+const holdSaleBtn = document.querySelector("#hold-sale-btn");
+if (holdSaleBtn) {
+  holdSaleBtn.addEventListener("click", () => {
+    holdCurrentSale();
+  });
+}
+
+// view holds button listener
+const viewHoldsBtn = document.querySelector("#view-holds-btn");
+if (viewHoldsBtn) {
+  viewHoldsBtn.addEventListener("click", () => {
+    viewHeldSales();
+  });
+}
+
+// resume hold button listener — event delegation on the list
+const heldSalesList = document.querySelector("#held-sales-list");
+if (heldSalesList) {
+  heldSalesList.addEventListener("click", (event) => {
+    const btn = event.target.closest(".resume-hold-btn");
+    if (!btn) return;
+
+    const holdId = parseInt(btn.dataset.holdId);
+    resumeHold(holdId);
+  });
+}
+
 /* =============================================================
   Async Functions
   ============================================================= */
@@ -585,5 +613,135 @@ async function confirmRefund(transactionId) {
   }
 }
 
+// save current cart as a hold
+async function holdCurrentSale() {
+  // safety check: cannot hold empty cart
+  if (cart.length === 0) {
+    alert("Cart is empty. Nothing to hold.");
+    return;
+  }
 
+  const label = document.querySelector("#hold-label").value || 
+    `Hold ${new Date().toLocaleTimeString('en-PH')}`;
+
+  try {
+    const response = await fetch("http://localhost:8000/api/hold", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`
+      },
+      body: JSON.stringify({
+        cart: cart,
+        label: label
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // clear the current cart after holding
+      cart = [];
+      renderCart();
+      updateTotals();
+      document.querySelector("#hold-label").value = "";
+      alert(`✅ Sale held successfully! Hold #${result.hold_id} — "${result.label}"`);
+    } else {
+      alert("Failed to hold sale: " + result.error);
+    }
+
+  } catch (error) {
+    console.error("Hold failed:", error);
+    alert("Could not connect to server.");
+  }
+}
+
+// fetch and display all held sales
+async function viewHeldSales() {
+  const holdsList = document.querySelector("#held-sales-list");
+
+  try {
+    const response = await fetch("http://localhost:8000/api/holds", {
+      headers: {
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    const holds = await response.json();
+
+    // toggle visibility
+    if (holdsList.style.display === "block") {
+      holdsList.style.display = "none";
+      return;
+    }
+
+    if (holds.length === 0) {
+      holdsList.innerHTML = `<div style="font-size: 13px; color: #999; padding: 5px;">No held sales.</div>`;
+    } else {
+      holdsList.innerHTML = holds.map(hold => `
+        <div class="hold-item" style="display: flex; justify-content: space-between; 
+          align-items: center; padding: 6px; border: 1px solid #ddd; 
+          border-radius: 4px; margin-bottom: 4px; background: white; font-size: 13px;">
+          <div>
+            <strong>${hold.label}</strong><br>
+            <small>${new Date(hold.created_at).toLocaleTimeString('en-PH')}</small>
+          </div>
+          <button class="resume-hold-btn" data-hold-id="${hold.id}" 
+            style="padding: 4px 8px; background: #1A7A48; color: white; 
+            border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+            Resume
+          </button>
+        </div>
+      `).join("");
+    }
+
+    holdsList.style.display = "block";
+
+  } catch (error) {
+    console.error("Failed to load holds:", error);
+    alert("Could not load held sales.");
+  }
+}
+
+// resume a held sale — restores cart
+async function resumeHold(holdId) {
+  try {
+    // fetch holds to find the cart data
+    const response = await fetch("http://localhost:8000/api/holds", {
+      headers: { "Authorization": `Bearer ${authToken}` }
+    });
+
+    const holds = await response.json();
+    const hold = holds.find(h => h.id === holdId);
+
+    if (!hold) {
+      alert("Hold not found.");
+      return;
+    }
+
+    // warn if current cart has items
+    if (cart.length > 0) {
+      if (!confirm("This will replace your current cart. Continue?")) return;
+    }
+
+    // restore the cart from the saved JSON
+    cart = hold.cart_data;
+    renderCart();
+    updateTotals();
+
+    // delete the hold from the database
+    await fetch(`http://localhost:8000/api/hold/${holdId}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${authToken}` }
+    });
+
+    // hide the holds list
+    document.querySelector("#held-sales-list").style.display = "none";
+    alert(`✅ Sale resumed from Hold #${holdId}`);
+
+  } catch (error) {
+    console.error("Resume failed:", error);
+    alert("Could not resume hold.");
+  }
+}
 

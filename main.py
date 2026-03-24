@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from psycopg2.extras import RealDictCursor
+import json
 
 # from auth engine
 from auth import verify_password, create_access_token, SECRET_KEY, ALGORITHM
@@ -336,6 +337,93 @@ def process_refund(transaction_id: int, current_user: dict = Depends(require_man
     cursor.close()
     conn.close()
 
+# hold a transaction - save cart to database
+@app.post("/api/hold")
+def hold_transaction(data: dict, current_user: dict = Depends(get_current_user)):
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  try:
+    cashier_id = int(current_user["sub"])
+    cart_data = data.get("cart", [])
+    label = data.get("label", "Held Sale")
+
+    # safety check: cannot hold an empty cart
+    if not cart_data:
+      raise HTTPException(status_code=400, detail="Cannot hold an empty cart")
+
+    cursor.execute(
+      """
+      INSERT INTO held_transactions (cashier_id, cart_data, label)
+      VALUES (%s, %s, %s)
+      RETURNING id;
+      """,
+      (cashier_id, json.dumps(cart_data), label)
+    )
+    new_hold_id = cursor.fetchone()[0]
+    conn.commit()
+
+    return {"success": True, "hold_id": new_hold_id, "label": label}
+
+  except HTTPException:
+    raise
+  except Exception as e:
+    conn.rollback()
+    return {"success": False, "error": str(e)}
+
+  finally:
+    cursor.close()
+    conn.close()
+
+# Get all held transactions for current cashier
+@app.get("/api/holds")
+def get_holds(current_user: dict = Depends(get_current_user)):
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  try:
+    cashier_id = int(current_user["sub"])
+
+    cursor.execute(
+      """
+      SELECT id, label, cart_data, created_at
+      FROM held_transactions
+      WHERE cashier_id = %s
+      ORDER BY created_at DESC
+      """,
+      (cashier_id,)
+    )
+    rows = cursor.fetchall()
+    column_names = [desc[0] for desc in cursor.description]
+    holds_list = [dict(zip(column_names, row)) for row in rows]
+
+    return holds_list
+
+  finally:
+    cursor.close()
+    conn.close()
+
+# Delete a hold after it is resumed
+@app.delete("/api/hold/{hold_id}")
+def delete_hold(hold_id: int, current_user: dict = Depends(get_current_user)):
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  try:
+    cursor.execute(
+      "DELETE FROM held_transactions WHERE id = %s AND cashier_id = %s",
+      (hold_id, int(current_user["sub"]))
+    )
+    conn.commit()
+    return {"success": True}
+
+  except Exception as e:
+    conn.rollback()
+    return {"success": False, "error": str(e)}
+
+  finally:
+    cursor.close()
+    conn.close()
 
 # The Login Route
 @app.post("/api/login")
