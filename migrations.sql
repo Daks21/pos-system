@@ -46,4 +46,18 @@ UPDATE products
 SET tax_type = 'exempt' 
 WHERE category_id = 1;
 
+-- Migration 005: Add refund_status to transactions
+-- Reason: Feature 4 — Refunds (Module 8)
+ALTER TABLE transactions
+ADD COLUMN IF NOT EXISTS refund_status VARCHAR(20) DEFAULT 'completed';
 
+-- Migration 006: Create held_transactions table
+-- Reason: Feature 5 — Hold Transaction (Module 8)
+ALTER TABLE held_transactions... 
+CREATE TABLE IF NOT EXISTS held_transactions (
+  id          SERIAL PRIMARY KEY,
+  cashier_id  INTEGER REFERENCES users(id),
+  cart_data   JSONB NOT NULL,
+  label       VARCHAR(100),
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);

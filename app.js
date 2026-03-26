@@ -394,6 +394,26 @@ if (heldSalesList) {
   });
 }
 
+// cancel refund button — clears and hides the panel
+const cancelRefundBtn = document.querySelector("#cancel-refund-btn");
+if (cancelRefundBtn) {
+  cancelRefundBtn.addEventListener("click", () => {
+    // clear the input
+    document.querySelector("#refund-transaction-id").value = "";
+    
+    // hide the details panel
+    const detailsDiv = document.querySelector("#refund-details");
+    detailsDiv.style.display = "none";
+
+    // reset confirm button in case it was disabled
+    const confirmBtn = document.querySelector("#confirm-refund-btn");
+    confirmBtn.disabled = false;
+    confirmBtn.style.opacity = "1";
+    confirmBtn.style.cursor = "pointer";
+    confirmBtn.textContent = "Confirm Refund";
+  });
+}
+
 /* =============================================================
   Async Functions
   ============================================================= */
@@ -469,9 +489,6 @@ async function initPOS() {
   renderCart();
   updateTotals();
 } 
-
-initPOS (); // starting
-updateDateTime();
 
 // the checkout logic
 async function processCheckout() {
@@ -745,3 +762,5 @@ async function resumeHold(holdId) {
   }
 }
 
+initPOS (); // starting
+updateDateTime();

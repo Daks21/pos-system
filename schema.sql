@@ -43,7 +43,8 @@ CREATE TABLE transactions (
   payment_method VARCHAR(20) CHECK (payment_method IN ('cash', 'card', 'ewallet')),
   created_at    TIMESTAMPTZ DEFAULT NOW(), -- Precision Timeclock
   discount_amount DECIMAL(10,2) DEFAULT 0,  
-  discount_type   VARCHAR(20)               
+  discount_type   VARCHAR(20),
+  refund_status   VARCHAR(20) DEFAULT 'completed'        
 );
 
 CREATE TABLE transaction_lines (
@@ -60,4 +61,12 @@ CREATE TABLE IF NOT EXISTS tax_rates (
   name        VARCHAR(50) NOT NULL,
   rate        DECIMAL(5,4) NOT NULL,
   description TEXT
+);
+
+CREATE TABLE held_transactions (
+  id          SERIAL PRIMARY KEY,
+  cashier_id  INTEGER REFERENCES users(id),
+  cart_data   JSONB NOT NULL,
+  label       VARCHAR(100),
+  created_at  TIMESTAMPTZ DEFAULT NOW()
 );

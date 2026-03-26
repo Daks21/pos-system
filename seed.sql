@@ -46,3 +46,7 @@ INSERT INTO users (username, password_hash, full_name, role, is_active) VALUES
 ('admin', '$2b$12$H6axyEiWmnk17r1EyjlbUOJ9Hxp4sMfxla0Cnbb94Cr.yVZTex1/2', 'Evelyn Manager', 'manager', TRUE),
 ('cashier1', '$2b$12$tG99aVawrpcVqgLoM5CaaOE4tJaedO.Gi7aSeCqsMrEcL1HkURLRu', 'Juan Cashier', 'cashier', TRUE);
 
+-- set fruits/vegetables as tax exempt
+UPDATE products 
+SET tax_type = 'exempt' 
+WHERE category_id = 1;

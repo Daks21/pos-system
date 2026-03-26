@@ -3,13 +3,11 @@ from database import get_connection # importing database
 from pydantic import BaseModel # inspects comming data from the frontend to ensure match
 from fastapi.middleware.cors import CORSMiddleware # im port the guard
 from fastapi import Depends, HTTPException, status 
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+from guards import get_current_user, require_manager
 from psycopg2.extras import RealDictCursor
-import json
-
-# from auth engine
+from reports import router as reports_router
 from auth import verify_password, create_access_token, SECRET_KEY, ALGORITHM
+import json
 
 app = FastAPI()
 
@@ -20,6 +18,10 @@ app.add_middleware(
   allow_credentials=True,
   allow_methods=["*"], # allow GET, POST, etc.
   allow_headers=["*"],
+)
+
+app.include_router(
+  reports_router
 )
 
 # define the expected shape of incoming data
@@ -41,27 +43,6 @@ class LoginRequest(BaseModel):
   username: str
   password: str
 
-# tells fastapi where the Login is
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
-
-# Guard 1: Checks if user is logged in AT ALL (Cashier or Manager)
-def get_current_user(token: str = Depends(oauth2_scheme)):
-  try:
-    # try to read the cryptographically signed badge
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    user_id: str = payload.get("sub")
-    if user_id is None:
-      raise HTTPException(status_code=401, detail="Invalid Credentials")
-    return payload    # Returns the dict: {sub, username, role}
-  except JWTError:
-    # If the badge is fake, tampered with, or expired, kick user out
-    raise HTTPException(status_code=401, detail="Invalid Credentials")
-
-# Guard 2: Checks if user is Manager spcifically
-def require_manager(current_user: dict = Depends(get_current_user)):
-  if current_user.get("role") != "manager":
-    raise HTTPException(status_code=403, detail="Manager access required")
-  return current_user
 
 
 # read how many products

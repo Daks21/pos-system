@@ -1115,6 +1115,24 @@ body {
   transform: scale(0.98);
 }
 
+.cancel-refund-btn {
+  padding: 5px 10px;
+  cursor: pointer;
+  border: 1px solid var(--slate-300);
+  border-radius: var(--r-sm);
+  background: var(--white);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--slate-500);
+  transition: all var(--t-fast);
+}
+
+.cancel-refund-btn:hover {
+  background: var(--slate-200);
+  color: var(--slate-700);
+}
+
 /* ========================
    Login Error Message
    ======================== */
@@ -1125,4 +1143,24 @@ body {
   margin-bottom: var(--sp-3);
   min-height: 20px;
   text-align: center;
+}
+
+/* ========================
+   Dashboard Link
+   ======================== */
+.dashboard-link {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--blue-100);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  transition: all var(--t-fast);
+  font-family: var(--font-ui);
+}
+
+.dashboard-link:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--white);
 }

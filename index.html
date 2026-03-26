@@ -34,7 +34,8 @@
     <aside class="cart-panel">
 
       <div class="cart-header">
-        <span>Current Sale</span>
+        <a href="manager.html" class="dashboard-link manager-only">📊</a>
+        <span>Sale</span>
         <button id="clear-sale-btn" class="clear-btn manager-only">Clear Sale</button>
         <button id="logout-user-btn" class="logout-btn">Logout</button>
       </div>
@@ -59,6 +60,7 @@
           <input type="number" id="refund-transaction-id" class="refund-id-input" 
             placeholder="Transaction ID" min="1">
           <button id="lookup-transaction-btn" class="lookup-btn">Look Up</button>
+          <button id="cancel-refund-btn" class="cancel-refund-btn">✕</button>
         </div>
         <div id="refund-details" class="refund-details">
           <div id="refund-transaction-info"></div>
