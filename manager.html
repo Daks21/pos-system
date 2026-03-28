@@ -105,80 +105,86 @@
 
     <!-- Top Products Table + Export -->
     <section class="table-section">
-      <div class="table-card">
-        <div class="table-card-header">
-          <span class="chart-title">Top Products — Detailed View</span>
-          <button id="export-btn" class="export-btn">⬇ Export CSV</button>
+      <div class="table-scroll-wrapper">
+        <div class="table-card">
+          <div class="table-card-header">
+            <span class="chart-title">Top Products — Detailed View</span>
+            <button id="export-btn" class="export-btn">Export CSV</button>
+          </div>
+          <table class="products-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Product</th>
+                <th>Units Sold</th>
+                <th>Revenue</th>
+              </tr>
+            </thead>
+            <tbody id="products-table-body">
+              <tr><td colspan="4" class="table-loading">Loading...</td></tr>
+            </tbody>
+          </table>
+          <div id="products-pagination"></div>
         </div>
-        <table class="products-table">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Product</th>
-              <th>Units Sold</th>
-              <th>Revenue</th>
-            </tr>
-          </thead>
-          <tbody id="products-table-body">
-            <tr><td colspan="4" class="table-loading">Loading...</td></tr>
-          </tbody>
-        </table>
       </div>
     </section>
 
     <!-- Transaction History Table -->
     <section class="table-section">
-      <div class="table-card">
+      <div class="table-scroll-wrapper">
 
-        <div class="table-card-header">
-          <span class="chart-title">📋 Transaction History</span>
-          <div class="table-controls">
+        <div class="table-card">
 
-            <!-- Filter Buttons -->
-            <div class="filter-buttons">
-              <button class="filter-btn active" data-filter="all">All</button>
-              <button class="filter-btn" data-filter="completed">Completed</button>
-              <button class="filter-btn" data-filter="refunded">Refunded</button>
+          <div class="table-card-header">
+            <span class="chart-title">Transaction History</span>
+            <div class="table-controls">
+
+              <!-- Filter Buttons -->
+              <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="completed">Completed</button>
+                <button class="filter-btn" data-filter="refunded">Refunded</button>
+              </div>
+
+              <!-- CSV Export -->
+              <button id="export-txn-btn" class="export-btn">Export CSV</button>
+
             </div>
-
-            <!-- CSV Export -->
-            <button id="export-btn" class="export-btn">⬇ Export CSV</button>
-
           </div>
+
+          <!-- Summary counts -->
+          <div class="transaction-summary-row">
+            <span class="txn-summary-item">
+              Total: <strong id="txn-total-count">0</strong>
+            </span>
+            <span class="txn-summary-item completed-label">
+              Completed: <strong id="txn-completed-count">0</strong>
+            </span>
+            <span class="txn-summary-item refunded-label">
+              Refunded: <strong id="txn-refunded-count">0</strong>
+            </span>
+          </div>
+
+          <table class="products-table" id="transaction-history-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Cashier</th>
+                <th>Payment</th>
+                <th>Subtotal</th>
+                <th>Discount</th>
+                <th>Tax</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="transaction-history-body">
+              <tr><td colspan="9" class="table-loading">Loading...</td></tr>
+            </tbody>
+          </table>
+          <div id="txn-pagination"></div> 
         </div>
-
-        <!-- Summary counts -->
-        <div class="transaction-summary-row">
-          <span class="txn-summary-item">
-            Total: <strong id="txn-total-count">0</strong>
-          </span>
-          <span class="txn-summary-item completed-label">
-            Completed: <strong id="txn-completed-count">0</strong>
-          </span>
-          <span class="txn-summary-item refunded-label">
-            Refunded: <strong id="txn-refunded-count">0</strong>
-          </span>
-        </div>
-
-        <table class="products-table" id="transaction-history-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Date</th>
-              <th>Cashier</th>
-              <th>Payment</th>
-              <th>Subtotal</th>
-              <th>Discount</th>
-              <th>Tax</th>
-              <th>Total</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="transaction-history-body">
-            <tr><td colspan="9" class="table-loading">Loading...</td></tr>
-          </tbody>
-        </table>
-
       </div>
     </section>
 

@@ -363,16 +363,12 @@ def get_holds(current_user: dict = Depends(get_current_user)):
   cursor = conn.cursor()
 
   try:
-    cashier_id = int(current_user["sub"])
-
     cursor.execute(
       """
       SELECT id, label, cart_data, created_at
       FROM held_transactions
-      WHERE cashier_id = %s
       ORDER BY created_at DESC
-      """,
-      (cashier_id,)
+      """
     )
     rows = cursor.fetchall()
     column_names = [desc[0] for desc in cursor.description]

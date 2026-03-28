@@ -5,6 +5,12 @@ const username  = sessionStorage.getItem('username');
 
 // store all transactions in memory for client-side filtering
 let allTransactions = [];
+let allProducts    = [];
+let productsPage   = 1;
+let productsPerPage = 10;
+let filteredTransactions = [];
+let txnPage            = 1;
+let txnPerPage         = 10;
 
 // redirect if not logged in or not a manager
 if (!authToken || userRole !== 'manager') {
@@ -131,11 +137,11 @@ async function loadTopProducts() {
     const response = await fetch(`${API}/api/reports/top-products`, {
       headers: authHeaders()
     });
-    const data = await response.json();
+    allProducts = await response.json();
 
     // bar chart
-    const labels  = data.map(d => d.name);
-    const revenue = data.map(d => d.total_revenue);
+    const labels  = allProducts.map(d => d.name);
+    const revenue = allProducts.map(d => d.total_revenue);
 
     const ctx = document.getElementById('topProductsChart').getContext('2d');
     new Chart(ctx, {
@@ -173,25 +179,14 @@ async function loadTopProducts() {
           },
           x: {
             grid: { display: false },
-            ticks: {
-              font: { size: 10 },
-              maxRotation: 30
-            }
+            ticks: { font: { size: 10 }, maxRotation: 30 }
           }
         }
       }
     });
 
-    // table
-    const tbody = document.querySelector('#products-table-body');
-    tbody.innerHTML = data.map((item, index) => `
-      <tr>
-        <td>#${index + 1}</td>
-        <td>${item.name}</td>
-        <td>${parseFloat(item.total_sold).toFixed(2)}</td>
-        <td>${formatCurrency(item.total_revenue)}</td>
-      </tr>
-    `).join('');
+    // render table with pagination
+    renderProductsTable();
 
   } catch (error) {
     console.error('Failed to load top products:', error);
@@ -319,7 +314,8 @@ async function loadTransactionHistory() {
     const response = await fetch(`${API}/api/reports/transaction-history`, {
       headers: authHeaders()
     });
-    allTransactions = await response.json();
+    allTransactions      = await response.json();
+    filteredTransactions = [...allTransactions];
 
     // update summary counts
     const completed = allTransactions.filter(t => t.refund_status === 'completed').length;
@@ -329,8 +325,7 @@ async function loadTransactionHistory() {
     document.querySelector('#txn-completed-count').textContent = completed;
     document.querySelector('#txn-refunded-count').textContent  = refunded;
 
-    // render all by default
-    renderTransactionTable(allTransactions);
+    renderTransactionTable();
     setupFilterButtons();
 
   } catch (error) {
@@ -342,85 +337,112 @@ async function loadTransactionHistory() {
 
 // CSV Export
 function setupExport() {
+  // Top Products export (existing)
   const exportBtn = document.querySelector('#export-btn');
-  if (!exportBtn) return;
-
-  exportBtn.addEventListener('click', () => {
-    // create a temporary link and click it to trigger download
-    const link = document.createElement('a');
-    link.href = `${API}/api/reports/export/transactions`;
-    link.setAttribute('download', 'transactions.csv');
-
-    // add auth token as query param since we can't set headers on a link
-    link.href = `${API}/api/reports/export/transactions`;
-
-    // fetch the CSV with auth and trigger download manually
-    fetch(`${API}/api/reports/export/transactions`, {
-      headers: authHeaders()
-    })
-    .then(response => response.blob())
-    .then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'transactions.csv';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    })
-    .catch(error => {
-      console.error('Export failed:', error);
-      alert('Could not export. Is the server running?');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      fetch(`${API}/api/reports/export/transactions`, {
+        headers: authHeaders()
+      })
+      .then(r => r.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'transactions.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      })
+      .catch(() => alert('Could not export.'));
     });
-  });
+  }
+
+  // Transaction History export (new)
+  const exportTxnBtn = document.querySelector('#export-txn-btn');
+  if (exportTxnBtn) {
+    exportTxnBtn.addEventListener('click', () => {
+      fetch(`${API}/api/reports/export/transactions`, {
+        headers: authHeaders()
+      })
+      .then(r => r.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'transactions.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      })
+      .catch(() => alert('Could not export.'));
+    });
+  }
 }
 
 // All transactions
-function renderTransactionTable(data) {
-  const tbody = document.querySelector('#transaction-history-body');
+function renderProductsTable() {
+  const tbody = document.querySelector('#products-table-body');
+  const start = (productsPage - 1) * productsPerPage;
+  const end   = start + productsPerPage;
+  const paged = allProducts.slice(start, end);
 
-  if (data.length === 0) {
-    tbody.innerHTML = `
-      <tr><td colspan="9" class="table-loading">No transactions found.</td></tr>
-    `;
+  tbody.innerHTML = paged.map((item, index) => `
+    <tr>
+      <td>#${start + index + 1}</td>
+      <td>${item.name}</td>
+      <td>${parseFloat(item.total_sold).toFixed(2)}</td>
+      <td>${formatCurrency(item.total_revenue)}</td>
+    </tr>
+  `).join('');
+
+  renderPagination(
+    'products-pagination',
+    allProducts.length,
+    productsPerPage,
+    productsPage,
+    (newPage) => { productsPage = newPage; renderProductsTable(); },
+    (newSize) => { productsPerPage = newSize; productsPage = 1; renderProductsTable(); }
+  );
+}
+
+function renderTransactionTable() {
+  const tbody = document.querySelector('#transaction-history-body');
+  const start = (txnPage - 1) * txnPerPage;
+  const end   = start + txnPerPage;
+  const paged = filteredTransactions.slice(start, end);
+
+  if (paged.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="table-loading">No transactions found.</td></tr>`;
+    renderPagination('txn-pagination', 0, txnPerPage, txnPage, () => {}, () => {});
     return;
   }
 
-  tbody.innerHTML = data.map(txn => {
-    const isRefunded = txn.refund_status === 'refunded';
-    const rowClass   = isRefunded ? 'row-refunded' : '';
+  tbody.innerHTML = paged.map(txn => {
+    const isRefunded  = txn.refund_status === 'refunded';
+    const rowClass    = isRefunded ? 'row-refunded' : '';
     const statusBadge = isRefunded
       ? `<span class="status-badge status-refunded">Refunded</span>`
       : `<span class="status-badge status-completed">Completed</span>`;
 
     return `
       <tr class="${rowClass}">
-        <td style="font-family: var(--font-mono); font-weight: 700;">
-          #${txn.transaction_id}
-        </td>
-        <td style="font-size: 0.75rem;">
-          ${new Date(txn.date).toLocaleString('en-PH', {
-            month: 'short',
-            day:   'numeric',
-            year:  'numeric',
-            hour:  '2-digit',
-            minute:'2-digit'
-          })}
-        </td>
+        <td style="font-family: var(--font-mono); font-weight: 700;">#${txn.transaction_id}</td>
+        <td style="font-size: 0.75rem;">${new Date(txn.date).toLocaleString('en-PH', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        })}</td>
         <td>${txn.cashier}</td>
         <td style="text-transform: uppercase; font-size: 0.7rem; font-weight: 700;">
           ${txn.payment_method}
         </td>
-        <td style="font-family: var(--font-mono);">
-          ${formatCurrency(txn.subtotal)}
-        </td>
+        <td style="font-family: var(--font-mono);">${formatCurrency(txn.subtotal)}</td>
         <td style="font-family: var(--font-mono); color: var(--red-500);">
           ${txn.discount > 0 ? `-${formatCurrency(txn.discount)}` : '—'}
         </td>
-        <td style="font-family: var(--font-mono);">
-          ${formatCurrency(txn.tax)}
-        </td>
+        <td style="font-family: var(--font-mono);">${formatCurrency(txn.tax)}</td>
         <td style="font-family: var(--font-mono); font-weight: 700; color: var(--navy-800);">
           ${isRefunded ? `<s>${formatCurrency(txn.total)}</s>` : formatCurrency(txn.total)}
         </td>
@@ -428,28 +450,102 @@ function renderTransactionTable(data) {
       </tr>
     `;
   }).join('');
+
+  renderPagination(
+    'txn-pagination',
+    filteredTransactions.length,
+    txnPerPage,
+    txnPage,
+    (newPage) => { txnPage = newPage; renderTransactionTable(); },
+    (newSize) => { txnPerPage = newSize; txnPage = 1; renderTransactionTable(); }
+  );
 }
 
 // Filter transactions 
 function setupFilterButtons() {
   const filterBtns = document.querySelectorAll('.filter-btn');
-
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      // update active state
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      // filter the data
       const filter = btn.dataset.filter;
-      if (filter === 'all') {
-        renderTransactionTable(allTransactions);
-      } else {
-        const filtered = allTransactions.filter(t => t.refund_status === filter);
-        renderTransactionTable(filtered);
-      }
+      filteredTransactions = filter === 'all'
+        ? [...allTransactions]
+        : allTransactions.filter(t => t.refund_status === filter);
+
+      txnPage = 1; // reset to first page on filter change
+      renderTransactionTable();
     });
   });
+}
+
+// Shared Pagination Renderer
+function renderPagination(containerId, totalItems, perPage, currentPage, onPageChange, onSizeChange) {
+  const container = document.querySelector(`#${containerId}`);
+  if (!container) return;
+
+  const totalPages = Math.ceil(totalItems / perPage);
+
+  container.innerHTML = `
+    <div class="pagination-wrapper">
+      <div class="pagination-info">
+        Showing ${totalItems === 0 ? 0 : ((currentPage - 1) * perPage) + 1}–${Math.min(currentPage * perPage, totalItems)} of ${totalItems}
+      </div>
+      <div class="pagination-controls">
+        <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''}
+          onclick="paginationCallback('${containerId}', ${currentPage - 1})">‹</button>
+
+        ${generatePageNumbers(totalPages, currentPage).map(p =>
+          p === '...'
+            ? `<span class="page-ellipsis">…</span>`
+            : `<button class="page-btn ${p === currentPage ? 'page-btn-active' : ''}"
+                onclick="paginationCallback('${containerId}', ${p})">${p}</button>`
+        ).join('')}
+
+        <button class="page-btn" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}
+          onclick="paginationCallback('${containerId}', ${currentPage + 1})">›</button>
+      </div>
+      <div class="pagination-size">
+        <span>Per page:</span>
+        <select class="page-size-select" onchange="pageSizeCallback('${containerId}', this.value)">
+          <option value="5"  ${perPage === 5  ? 'selected' : ''}>5</option>
+          <option value="10" ${perPage === 10 ? 'selected' : ''}>10</option>
+          <option value="25" ${perPage === 25 ? 'selected' : ''}>25</option>
+          <option value="50" ${perPage === 50 ? 'selected' : ''}>50</option>
+        </select>
+      </div>
+    </div>
+  `;
+
+  // store callbacks on the container element
+  container._onPageChange = onPageChange;
+  container._onSizeChange = onSizeChange;
+}
+
+function generatePageNumbers(totalPages, currentPage) {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  const pages = [1];
+  if (currentPage > 3) pages.push('...');
+  for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+    pages.push(i);
+  }
+  if (currentPage < totalPages - 2) pages.push('...');
+  pages.push(totalPages);
+  return pages;
+}
+
+// global callbacks used by inline onclick handlers
+function paginationCallback(containerId, page) {
+  const container = document.querySelector(`#${containerId}`);
+  if (container && container._onPageChange) container._onPageChange(page);
+}
+
+function pageSizeCallback(containerId, size) {
+  const container = document.querySelector(`#${containerId}`);
+  if (container && container._onSizeChange) container._onSizeChange(parseInt(size));
 }
 
 // Initialize Dashboard
